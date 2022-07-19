@@ -37,7 +37,7 @@
 #include "visibility_control.h"
 #include "semantic_components/imu_sensor.hpp"
 
-#include "system_interface_bolt.hpp"
+#include "system_interface_odri.hpp"
 
 
 using hardware_interface::return_type;
@@ -78,16 +78,16 @@ typedef Matrix<long, 4, 1> Vector4l;
 }  // namespace Eigen
 
 
-namespace ros2_control_bolt
+namespace ros2_control_odri
 {
 
 
-class SystemBoltHardware : public
+class SystemOdriHardware : public
   hardware_interface::BaseInterface<hardware_interface::SystemInterface>
 {
 public:
 
-  RCLCPP_SHARED_PTR_DEFINITIONS(SystemBoltHardware)
+  RCLCPP_SHARED_PTR_DEFINITIONS(SystemOdriHardware)
 
   ROS2_CONTROL_ODRI_PUBLIC
   hardware_interface::return_type configure(const hardware_interface::HardwareInfo & system_info) override;
@@ -146,7 +146,7 @@ private:
 
   std::map<std::string,control_mode_t> new_modes_;
 
-  //Definition of multiple variables about Bolt
+  //Definition of multiple variables about Odri
   // Joint
   Eigen::Vector6i motor_numbers_;
   Eigen::Vector6b motor_reversed_polarities_;
@@ -179,6 +179,6 @@ private:
 
 
 
-}  // namespace ros2_control_bolt
+}  // namespace ros2_control_odri
 
 #endif  // ROS2_CONTROL_ODRI__SYSTEM_ODRI_HPP_

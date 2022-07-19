@@ -55,7 +55,6 @@ find_package(hardware_interface REQUIRED)
 find_package(odri_control_interface REQUIRED)
 find_package(controller_interface REQUIRED)
 find_package(master_board_sdk REQUIRED)
-find_package(ros2_control REQUIRED)
 
 add_project_dependency(yaml-cpp CONFIG REQUIRED)
 add_project_dependency(Eigen3 REQUIRED PKG_CONFIG_REQUIRES "eigen3 >= 3.0.5")
@@ -87,7 +86,7 @@ ament_export_dependencies(odri_control_interface)
 
 # --- MAIN LIBRARY -------------------------------------------------------------
 set(ROS2_HARDWARE_INTERFACE_ODRI_SRC src/system_odri.cpp)
-add_library(${PROJECT_NAME} SHARED ${ROS2_HARDWARE_INTERFACE_BOLT_SRC})
+add_library(${PROJECT_NAME} SHARED ${ROS2_HARDWARE_INTERFACE_ODRI_SRC})
 target_link_libraries(${PROJECT_NAME} ${YAML_CPP_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} master_board_sdk::master_board_sdk)
 target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
