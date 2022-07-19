@@ -1,17 +1,21 @@
-# ros2_control_odri
+# ros2_hardware_interface_odri
 ----------------------
 
-Author : Paul Rouanet
+## Introduction
 
-### What it is
+This project provides a ros2_control SystemInterface to the master board ODRI.
+The particularity of this board is to provide a command interface in position, velocity, torque and gains (Kp, Kd).
 
-A personal version of odri_control_interface demos adapt to Odri ==> /test/.
+This package can be used together with a description package in order to provide the mapping between the robot models
+and the actuator. A robot_config.yaml file is needed.
 
-And an adaptation of Olivier Stasse's codes : rrbot_system_quadruped.hpp and .cpp in rrbot_system_odri.hpp and .cpp (in /include/ and /src/).
+## Installing from source:
 
-system_odri_multi_interface has not been modified by Paul Rouanet
-
-----------------------
+```
+colcon build --packages-select ros2_hardware_interface_odri
+source ./install/setup.bash
+ros2 launch ros2_control_odri_bringup system_odri.launch.py
+```
 
 ### In system_odri :
 
@@ -45,14 +49,15 @@ Functions :
 
 ### Tests :
 
-The compilation with ```colcon build --packages-select ros2_hardware_interface_odri``` is ok, but no way to test the good behaviour of those 5 new functions.
+The compilation with ```colcon build --packages-select ros2_hardware_interface_odri``` is ok
 
-What has been done :
 
-```
-colcon build --packages-select ros2_hardware_interface_odri
-source ./install/setup.bash
-ros2 launch ros2_control_odri_bringup system_odri.launch.py
-```
 
-Bugs did not allow us to do test.
+Tested on Bolt.
+
+# Credits :
+
+ *   Maxime-Ulrich Fansi (04/2022-09/2022) - First working version of gazebo_bolt_ros2_control
+ *   Benjamin Amsellem (10/2021-02/2022) - First working version of ros2_hardware_bolt
+ *   Paul Rouanet - (03/2021-09/2021) - Building the LAAS Bolt, starting this repo
+ *   Olivier Stasse (03/2021 - Supervision)
