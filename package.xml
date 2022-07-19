@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<?xml-model
+   href="http://download.ros.org/schema/package_format3.xsd"
+   schematypens="http://www.w3.org/2001/XMLSchema"?>
+
+<!-- Adaptation of package.xml from odri_control_interface -->
+
+<package format="3">
+
+    <name>ros2_hardware_interface_odri</name>
+    <version>1.0.0</version>
+
+    <description>
+	Common interface for controlling robots build with the odri master board.
+	Here its a test version for Odri.
+    </description>
+
+    <maintainer email="prouanet@laas.fr">Paul Rouanet</maintainer>
+
+    <license>BSD 3-clause</license>
+
+    <buildtool_depend>cmake</buildtool_depend>
+    <buildtool_depend>mpi_cmake_modules</buildtool_depend>
+
+    <buildtool_depend>ament_cmake</buildtool_depend>
+
+    <!-- CMake module containing helper to find the OS, boost, python, etc. -->
+    <depend>pybind11</depend>
+    <depend>Threads</depend>
+    <depend>master_board_sdk</depend>
+    <depend>Boost</depend>
+    <depend>Eigen3</depend>
+    <depend>eigenpy</depend>
+
+
+    <!-- Modules useful for system_odri -->
+    <depend>hardware_interface</depend>
+    <depend>pluginlib</depend>
+    <depend>rclcpp</depend>
+    <depend>odri_control_interface</depend>
+    <depend>controller_interface</depend>
+
+
+    <test_depend>ament_cmake_gtest</test_depend>
+
+    <export>
+      <build_type>ament_cmake</build_type>
+    </export>
+
+</package>
