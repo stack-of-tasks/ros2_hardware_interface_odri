@@ -5,7 +5,7 @@
 
    Vector12d --> Vector6d
    Boucles for pour les couples : i<12 --> i<6
-   CONFIG_ROBOT_YAML 
+   CONFIG_ROBOT_YAML
 
 */
 

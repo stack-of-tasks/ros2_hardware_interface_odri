@@ -2,7 +2,7 @@
 
    Vector12d --> Vector6d
    Loop for the torques : i<12 --> i<6
-   CONFIG_ROBOT_YAML 
+   CONFIG_ROBOT_YAML
 
 */
 
