@@ -133,8 +133,14 @@ private:
   void display_robot_state();
 
   // Read desired starting position.
-  void read_desired_starting_position();
-  
+  return_type read_desired_starting_position();
+
+  // Read default joint cmd and state values
+  return_type read_default_cmd_state_value(std::string &default_joint_cs);
+
+  // Read default cmd or state value.
+  // default_joint_cs: "default_joint_cmd" or "default_joint_state"
+  // default_joint_cs:
   //Joint number from urdf
   std::map<std::string,int> joint_name_to_array_index_;
 
@@ -173,7 +179,7 @@ private:
 
   // Starting desired position.
   Eigen::VectorXd eig_des_start_pos_;
-  
+
 };
 
 
