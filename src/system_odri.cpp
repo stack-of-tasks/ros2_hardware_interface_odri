@@ -53,12 +53,96 @@ Eigen::Vector6d desired_joint_position = Eigen::Vector6d::Zero();
 Eigen::Vector6d desired_torque = Eigen::Vector6d::Zero();
 
 
-  
+return_type SystemOdriHardware::read_default_cmd_state_value(std::string &default_joint_cs)
+{
+  // Hardware parameters provides a string
+  std::string str_des_start_pos = info_.hardware_parameters[default_joint_cs];
+
+  typedef std::shared_ptr<std::map<std::string,PosVelEffortGains> > shr_ptr_map_pveg;
+  shr_ptr_map_pveg  hw_cs;
+  if (default_joint_cs=="default_joint_cmd")
+    hw_cs = shr_ptr_map_pveg(&hw_commands_);
+  else if (default_joint_cs=="default_joint_state")
+    hw_cs = shr_ptr_map_pveg(&hw_states_);
+  else
+    return return_type::ERROR;
+
+  // Read the parameter through a stream of strings.
+  std::istringstream iss_def_cmd_val;
+  iss_def_cmd_val.str(str_des_start_pos);
+
+  while (!iss_def_cmd_val.eof()) {
+    // Find joint name.
+    std::string joint_name;
+    iss_def_cmd_val >> joint_name;
+
+    // Find the associate joint
+    bool found_joint=false;
+    for (const hardware_interface::ComponentInfo & joint : info_.joints) {
+
+      if (joint.name==joint_name) {
+	auto handle_dbl_and_msg = [] (std::istringstream &iss_def_cmd_val,
+				      std::string &joint_name,
+				      double &adbl, std::string &msg) {
+	  if (!iss_def_cmd_val.eof())
+	    iss_def_cmd_val >> adbl;
+	  else
+	  {
+	    RCLCPP_FATAL(
+			 rclcpp::get_logger("SystemOdriHardware"),
+			 "default_joint_cmd '%s' no '%s'.",
+			 joint_name.c_str(), msg.c_str());
+	    return return_type::ERROR;
+	  }
+	  return return_type::OK;
+	};
+
+        std::string amsg("position");
+        if (handle_dbl_and_msg(iss_def_cmd_val, joint_name,
+			       hw_cs->at(joint_name).position,amsg)==return_type::ERROR)
+	  return return_type::ERROR;
+
+	amsg = "velocity";
+        if (handle_dbl_and_msg(iss_def_cmd_val, joint_name,
+			       hw_cs->at(joint_name).velocity,amsg)==return_type::ERROR)
+	  return return_type::ERROR;
+
+	amsg = "effort";
+        if (handle_dbl_and_msg(iss_def_cmd_val, joint_name,
+			       hw_cs->at(joint_name).effort,amsg)==return_type::ERROR)
+	  return return_type::ERROR;
+
+	amsg = "Kp";
+        if (handle_dbl_and_msg(iss_def_cmd_val, joint_name,
+			       hw_cs->at(joint_name).Kp,amsg)==return_type::ERROR)
+	  return return_type::ERROR;
+
+	amsg = "Kd";
+        if (handle_dbl_and_msg(iss_def_cmd_val, joint_name,
+			       hw_cs->at(joint_name).Kd,amsg)==return_type::ERROR)
+	  return return_type::ERROR;
+
+	found_joint=true;
+	break; // Found the joint break the loop
+      }
+    }
+
+    if (!found_joint)  {
+      RCLCPP_FATAL(
+		   rclcpp::get_logger("SystemOdriHardware"),
+		   "Joint '%s' not found in '%s'.",
+		   joint_name.c_str(), default_joint_cs.c_str());
+      return return_type::ERROR;
+    }
+  }
+  return return_type::OK;
+}
+
 /// Reading desired position
-void SystemOdriHardware::read_desired_starting_position()
+return_type SystemOdriHardware::read_desired_starting_position()
 {
   std::vector<double> vec_des_start_pos;
-  
+
   // Hardware parameters provides a string
   std::string str_des_start_pos = info_.hardware_parameters["desired_starting_position"];
 
@@ -77,10 +161,11 @@ void SystemOdriHardware::read_desired_starting_position()
   int idx_dsp=0;
   for (auto apos : vec_des_start_pos)
     eig_des_start_pos_[idx_dsp++] = apos;
-  
+
+  return return_type::OK;
 }
 
-  
+
 return_type SystemOdriHardware::configure(const hardware_interface::HardwareInfo & info)
 {
   if (configure_default(info) != return_type::OK) {
@@ -455,22 +540,29 @@ return_type SystemOdriHardware::start()
   robot_ = RobotFromYamlFile(info_.hardware_parameters["odri_config_yaml"]);
 
   /// Read hardware parameter "desired_starting_position"
-  read_desired_starting_position();
+  if (read_desired_starting_position()==return_type::ERROR)
+    return return_type::ERROR;
 
-  
-  
-  // Initialize the desired starting position.
+  /// Read hardware parameter "default_joint_cmd"
+  std::string default_joint_cs("default_joint_cmd");
+  if (read_default_cmd_state_value(default_joint_cs)==return_type::ERROR)
+    return return_type::ERROR;
+
+  /// Read hardware parameter "default_joint_state"
+  default_joint_cs = "default_joint_state";
+  if (read_default_cmd_state_value(default_joint_cs)==return_type::ERROR)
+    return return_type::ERROR;
+
+  /// Initialize the robot to the desired starting position.
   robot_->Initialize(eig_des_start_pos_);
 
-  // set some default values
+  /// Build the map from name to index.
   for (const hardware_interface::ComponentInfo & joint : info_.joints) {
-    if (std::isnan(hw_states_[joint.name].position)) {
-      hw_states_[joint.name] = {0.0, 0.0, 0.0, 3.0, 0.05};
-      hw_commands_[joint.name] = {0.0, 0.0, 0.0, 3.0, 0.05};
-    }
+    // First set the key
     joint_name_to_array_index_[joint.name]=0;
   }
 
+  // Then build the index.
   uint idx=0;
   for (auto it = joint_name_to_array_index_.begin();
             it != joint_name_to_array_index_.end(); ++it) {
