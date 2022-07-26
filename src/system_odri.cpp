@@ -53,6 +53,34 @@ Eigen::Vector6d desired_joint_position = Eigen::Vector6d::Zero();
 Eigen::Vector6d desired_torque = Eigen::Vector6d::Zero();
 
 
+  
+/// Reading desired position
+void SystemOdriHardware::read_desired_starting_position()
+{
+  std::vector<double> vec_des_start_pos;
+  
+  // Hardware parameters provides a string
+  std::string str_des_start_pos = info_.hardware_parameters["desired_starting_position"];
+
+  // Read the parameter through a stream of strings.
+  std::istringstream iss_des_start_pos;
+  iss_des_start_pos.str(str_des_start_pos);
+
+  // From istringstream to std::vector
+  while (!iss_des_start_pos.eof()) {
+    double apos;
+    iss_des_start_pos >> apos;
+    vec_des_start_pos.push_back(apos);
+  }
+
+  // From std::vector to VectorXd
+  int idx_dsp=0;
+  for (auto apos : vec_des_start_pos)
+    eig_des_start_pos_[idx_dsp++] = apos;
+  
+}
+
+  
 return_type SystemOdriHardware::configure(const hardware_interface::HardwareInfo & info)
 {
   if (configure_default(info) != return_type::OK) {
@@ -426,32 +454,13 @@ return_type SystemOdriHardware::start()
   // Initialize Robot
   robot_ = RobotFromYamlFile(info_.hardware_parameters["odri_config_yaml"]);
 
+  /// Read hardware parameter "desired_starting_position"
+  read_desired_starting_position();
+
   
-  /// Reading desired position
-  VectorXd eig_des_start_pos;
-  std::vector<double> vec_des_start_pos;
   
-  // Hardware parameters provides a string
-  std::string str_des_start_pos = info_.hardware_parameters["desired_starting_position"];
-
-  // Read the parameter through a stream of strings.
-  std::istringstream iss_des_start_pos;
-  iss_des_start_pos.str(str_des_start_pos);
-
-  // From istringstream to std::vector
-  while (!iss_des_start_pos.eof()) {
-    double apos;
-    iss_des_start_pos >> apos;
-    vec_des_start_pos.push_back(apos);
-  }
-
-  // From std::vector to VectorXd
-  int idx_dsp=0;
-  for (auto apos : vec_des_start_pos)
-    eig_des_start_pos[idx_dsp++] = apos;
-
   // Initialize the desired starting position.
-  robot_->Initialize(eig_des_start_pos);
+  robot_->Initialize(eig_des_start_pos_);
 
   // set some default values
   for (const hardware_interface::ComponentInfo & joint : info_.joints) {
