@@ -132,6 +132,9 @@ private:
   // Give some information on the current robot state.
   void display_robot_state();
 
+  // Read desired starting position.
+  void read_desired_starting_position();
+  
   //Joint number from urdf
   std::map<std::string,int> joint_name_to_array_index_;
 
@@ -168,13 +171,9 @@ private:
   std::shared_ptr<odri_control_interface::JointCalibrator> calib_;
   std::shared_ptr<MasterBoardInterface> main_board_ptr_;
 
-
-  double motor_constants_;
-  double gear_ratios_;
-  double max_currents_;
-  double max_joint_velocities_;
-  double safety_damping_;
-
+  // Starting desired position.
+  Eigen::VectorXd eig_des_start_pos_;
+  
 };
 
 
