@@ -17,6 +17,21 @@ source ./install/setup.bash
 ros2 launch ros2_control_odri_bringup system_odri.launch.py
 ```
 
+## How to use it ?
+
+### ros2_control
+
+In your xacro file (used to generate the urdf file) you can add the following snippet:
+```
+ <plugin>ros2_control_bolt/SystemBoltHardware</plugin>
+            <param name="bolt_yaml">2.0</param>
+            <xacro:property name="prop_bolt_config_yaml" value="$(find ros2_description_bolt)/config/bolt_config.yaml" />
+            <param name="bolt_config_yaml">${prop_bolt_config_yaml}</param>
+	    <param name="desired_starting_position">0.0 0.0 0.0 0.0 0.0 0.0</param>
+```
+
+The field ```desired_starting_position``` should have the same size than the number of joints.
+
 ### In system_odri :
 
 Inclusion of all odri_control_interface header needed to use Odri.
