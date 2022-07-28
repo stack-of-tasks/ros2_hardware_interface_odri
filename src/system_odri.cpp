@@ -156,6 +156,7 @@ namespace ros2_control_odri
       iss_des_start_pos >> apos;
       vec_des_start_pos.push_back(apos);
     }
+    eig_des_start_pos_.resize(vec_des_start_pos.size());
 
     // From std::vector to VectorXd
     int idx_dsp=0;
