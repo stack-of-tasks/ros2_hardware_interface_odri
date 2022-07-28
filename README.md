@@ -25,9 +25,9 @@ In your xacro file (used to generate the urdf file) you can add the following ``
 ```
 <ros2_control name="bolt" type="system">
   <hardware>
-    <plugin>ros2_control_bolt/SystemOdriHardware</plugin>
+    <plugin>ros2_control_odri/SystemOdriHardware</plugin>
        <xacro:property name="prop_bolt_config_yaml" value="$(find ros2_description_bolt)/config/bolt_config.yaml" />
-      	    <param name="bolt_config_yaml">${prop_bolt_config_yaml}</param>
+      	    <param name="odri_config_yaml">${prop_bolt_config_yaml}</param>
     	    <param name="desired_starting_position">0.0 0.0 0.0 0.0 0.0 0.0</param>
     	    <param name="default_joint_cmd">FL_HAA 0.0 0.0 0.0 3.0 0.05
     	    	   FR_HAA 0.0 0.0 0.0 3.0 0.05
