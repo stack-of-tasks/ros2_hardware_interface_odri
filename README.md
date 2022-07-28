@@ -21,35 +21,47 @@ ros2 launch ros2_control_odri_bringup system_odri.launch.py
 
 ### ros2_control
 
-In your xacro file (used to generate the urdf file) you can add the following snippet:
+In your xacro file (used to generate the urdf file) you can add the following ```hardware``` block in your ros2_control system:
 ```
- <plugin>ros2_control_bolt/SystemBoltHardware</plugin>
-            <param name="bolt_yaml">2.0</param>
-            <xacro:property name="prop_bolt_config_yaml" value="$(find ros2_description_bolt)/config/bolt_config.yaml" />
-            <param name="bolt_config_yaml">${prop_bolt_config_yaml}</param>
-	    <param name="desired_starting_position">0.0 0.0 0.0 0.0 0.0 0.0</param>
+<ros2_control name="bolt" type="system">
+  <hardware>
+    <plugin>ros2_control_bolt/SystemOdriHardware</plugin>
+       <xacro:property name="prop_bolt_config_yaml" value="$(find ros2_description_bolt)/config/bolt_config.yaml" />
+      	    <param name="bolt_config_yaml">${prop_bolt_config_yaml}</param>
+    	    <param name="desired_starting_position">0.0 0.0 0.0 0.0 0.0 0.0</param>
+    	    <param name="default_joint_cmd">FL_HAA 0.0 0.0 0.0 3.0 0.05
+    	    	   FR_HAA 0.0 0.0 0.0 3.0 0.05
+	   	   FL_KFE 0.0 0.0 0.0 3.0 0.05
+		   FL_HFE 0.0 0.0 0.0 3.0 0.05
+		   FR_KFE 0.0 0.0 0.0 3.0 0.05
+		   FR_HFE 0.0 0.0 0.0 3.0 0.05</param>
+	    <param name="default_state_cmd">FL_HAA 0.0 0.0 0.0 3.0 0.05
+	    	   FR_HAA 0.0 0.0 0.0 3.0 0.05
+		   FL_KFE 0.0 0.0 0.0 3.0 0.05
+		   FL_HFE 0.0 0.0 0.0 3.0 0.05
+		   FR_KFE 0.0 0.0 0.0 3.0 0.05
+		   FR_HFE 0.0 0.0 0.0 3.0 0.05</param>
+
+  </hardware>
+  ...
+  ...
+</ros2_control>
 ```
 
 The field ```desired_starting_position``` should have the same size than the number of joints.
+Here the robot Bolt has 6 joints set to zero.
+The field ```desired_joint_cmd``` should provide for each joint a list of ```joint_name position velocity effort Kp Kd```.
+They are the first values send to the master ODRI board.
+Here the 6 joint commands of the Bolt robot are set to position: 0.0, velocity: 0.0, effort: 0.0, Kp: 3.0, Kd: 0.05
+
+The field ```desired_state_cmd``` should provide for each joint a list of ```joint_name position velocity effort Kp Kd```.
+They are the first values that ros2_control will provides before reading the master ODRI board.
+Here the 6 joint states of the Bolt robot are set to position: 0.0, velocity: 0.0, effort: 0.0, Kp: 3.0, Kd: 0.05
 
 ### In system_odri :
 
-Inclusion of all odri_control_interface header needed to use Odri.
+Inclusion of the odri_control_interface header needed to use Odri.
 
-Use of the namespace ros2_control_odri
-
-Define of a structure used for IMU : GyroAccLineEulerQuater (must be optimized (x,y,z))
-
-
-Functions :
-   - Definition of init_robot: This function use ODRI methods to initialize the robot :
-      - Call Ethernet output
-      - Define main_board_ptr_ as theMasterboard with the Ethernet name
-      - Define all the joints_ with properties
-      - Define the IMU
-      - Finally define the robot_ with those 3 elements
-
-   - calibration() : use to calibrate the robot. Currently called in start function. **Maybe a bug to fix line 532 :  robot_->RunCalibration(calib_ctrl); {namespace ?}
 
    - start() : Start the robot, set some default values to 0, do the calibration, read sensors data
 
@@ -65,7 +77,6 @@ Functions :
 ### Tests :
 
 The compilation with ```colcon build --packages-select ros2_hardware_interface_odri``` is ok
-
 
 
 Tested on Bolt.
