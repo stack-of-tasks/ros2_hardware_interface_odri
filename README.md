@@ -35,7 +35,7 @@ In your xacro file (used to generate the urdf file) you can add the following ``
 		   FL_HFE 0.0 0.0 0.0 3.0 0.05
 		   FR_KFE 0.0 0.0 0.0 3.0 0.05
 		   FR_HFE 0.0 0.0 0.0 3.0 0.05</param>
-	    <param name="default_state_cmd">FL_HAA 0.0 0.0 0.0 3.0 0.05
+	    <param name="default_joint_state">FL_HAA 0.0 0.0 0.0 3.0 0.05
 	    	   FR_HAA 0.0 0.0 0.0 3.0 0.05
 		   FL_KFE 0.0 0.0 0.0 3.0 0.05
 		   FL_HFE 0.0 0.0 0.0 3.0 0.05
