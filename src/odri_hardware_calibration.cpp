@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
       exit(-1);
     }
   aif.close();
-      
+
   // Define the robot from a yaml file.
   auto robot = RobotFromYamlFile(argv[1]);
 
