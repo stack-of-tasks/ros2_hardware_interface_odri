@@ -334,14 +334,16 @@ namespace ros2_control_odri
   void SystemOdriHardware::display_robot_state()
   {
     for (const hardware_interface::ComponentInfo & joint : info_.joints) {
-      std::cout << "joint " << joint.name << " "
-		<< hw_commands_[joint.name].position << " "
-		<< hw_commands_[joint.name].velocity << " "
-		<< hw_commands_[joint.name].effort  << " "
-		<< hw_commands_[joint.name].Kp << " "
-		<< hw_commands_[joint.name].Kd << std::endl;
+          RCLCPP_INFO_STREAM(rclcpp::get_logger("SystemOdriHardware"),
+			      "joint " << joint.name << " "
+			      << hw_commands_[joint.name].position << " "
+			      << hw_commands_[joint.name].velocity << " "
+			      << hw_commands_[joint.name].effort  << " "
+			      << hw_commands_[joint.name].Kp << " "
+			      << hw_commands_[joint.name].Kd);
     }
-    std::cout <<" **************************" << std::endl;
+    RCLCPP_INFO_STREAM(rclcpp::get_logger("SystemOdriHardware"),
+			" **************************");
   }
 
   return_type SystemOdriHardware::prepare_command_mode_switch
@@ -412,7 +414,8 @@ namespace ros2_control_odri
       control_mode_[joint.name] = new_modes_[joint.name];
     }
 
-    std::cout << "in prepare_command_mode_switch" << std::endl;
+    RCLCPP_INFO_STREAM(rclcpp::get_logger("SystemOdriHardware"),
+			"In prepare_command_mode_switch()");
     display_robot_state();
     return return_type::OK;
   }
@@ -690,7 +693,9 @@ namespace ros2_control_odri
 
     for (const hardware_interface::ComponentInfo & joint : info_.joints) {
       if ((control_mode_[joint.name]==control_mode_t::POS_VEL_EFF_GAINS) ||
-	  (control_mode_[joint.name]==control_mode_t::POSITION)) {
+	  (control_mode_[joint.name]==control_mode_t::POSITION)||
+	  (control_mode_[joint.name]==control_mode_t::VELOCITY)||
+	  (control_mode_[joint.name]==control_mode_t::EFFORT)) {
         positions[joint_name_to_array_index_[joint.name]] = hw_commands_[joint.name].position;
         velocities[joint_name_to_array_index_[joint.name]] = hw_commands_[joint.name].velocity;
         torques[joint_name_to_array_index_[joint.name]] = hw_commands_[joint.name].effort;
@@ -698,18 +703,6 @@ namespace ros2_control_odri
         gain_KD[joint_name_to_array_index_[joint.name]] = hw_commands_[joint.name].Kd;
       }
     }
-
-    static unsigned int my_perso_counter2 = 0;
-    if(my_perso_counter2 % 1000 == 0)
-      {
-	std::cout << "positions:" << positions.transpose() << std::endl;
-	std::cout << "velocities:" << velocities.transpose() << std::endl;
-	std::cout << "torques: " << torques.transpose() << std::endl;
-	std::cout << "gain_KP: " << gain_KP.transpose() << std::endl;
-	std::cout << "gain_KD: " << gain_KD.transpose() << std::endl;
-	std::cout << " " << std::endl;
-      }
-    ++my_perso_counter2;
 
     robot_->joints->SetDesiredPositions(positions);
     robot_->joints->SetDesiredVelocities(velocities);
@@ -721,8 +714,6 @@ namespace ros2_control_odri
 
     return return_type::OK;
   }
-
-
 
 }  // namespace ros2_control_odri
 
