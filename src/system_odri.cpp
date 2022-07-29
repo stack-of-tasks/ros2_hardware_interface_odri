@@ -56,14 +56,26 @@ namespace ros2_control_odri
   return_type SystemOdriHardware::read_default_cmd_state_value(std::string &default_joint_cs)
   {
     // Hardware parameters provides a string
+    if (info_.hardware_parameters.find(default_joint_cs)==info_.hardware_parameters.end())
+      {
+        RCLCPP_FATAL(
+                     rclcpp::get_logger("SystemOdriHardware"),
+                     "%s not in the parameter list of ros2_control_odri/SystemOdriHardware!",
+                     default_joint_cs.c_str());
+        return return_type::ERROR;
+      }
     std::string str_des_start_pos = info_.hardware_parameters[default_joint_cs];
 
-    typedef std::shared_ptr<std::map<std::string,PosVelEffortGains> > shr_ptr_map_pveg;
-    shr_ptr_map_pveg  hw_cs;
+    typedef std::map<std::string,PosVelEffortGains> map_pveg;
+    map_pveg  hw_cs;
     if (default_joint_cs=="default_joint_cmd")
-      hw_cs = shr_ptr_map_pveg(&hw_commands_);
+      {
+        hw_cs = hw_commands_;
+      }
     else if (default_joint_cs=="default_joint_state")
-      hw_cs = shr_ptr_map_pveg(&hw_states_);
+      {
+        hw_cs = hw_states_;
+      }
     else
       return return_type::ERROR;
 
@@ -74,6 +86,9 @@ namespace ros2_control_odri
     while (!iss_def_cmd_val.eof()) {
       // Find joint name.
       std::string joint_name;
+      RCLCPP_INFO_STREAM(rclcpp::get_logger("SystemOdriHardware"),
+                         " Current value of iss_def_cmd_val:"<<
+                         iss_def_cmd_val.str().c_str());
       iss_def_cmd_val >> joint_name;
 
       // Find the associate joint
@@ -99,27 +114,27 @@ namespace ros2_control_odri
 
 	  std::string amsg("position");
 	  if (handle_dbl_and_msg(iss_def_cmd_val, joint_name,
-				 hw_cs->at(joint_name).position,amsg)==return_type::ERROR)
+				 hw_cs.at(joint_name).position,amsg)==return_type::ERROR)
 	    return return_type::ERROR;
 
 	  amsg = "velocity";
 	  if (handle_dbl_and_msg(iss_def_cmd_val, joint_name,
-				 hw_cs->at(joint_name).velocity,amsg)==return_type::ERROR)
+				 hw_cs.at(joint_name).velocity,amsg)==return_type::ERROR)
 	    return return_type::ERROR;
 
 	  amsg = "effort";
 	  if (handle_dbl_and_msg(iss_def_cmd_val, joint_name,
-				 hw_cs->at(joint_name).effort,amsg)==return_type::ERROR)
+				 hw_cs.at(joint_name).effort,amsg)==return_type::ERROR)
 	    return return_type::ERROR;
 
 	  amsg = "Kp";
 	  if (handle_dbl_and_msg(iss_def_cmd_val, joint_name,
-				 hw_cs->at(joint_name).Kp,amsg)==return_type::ERROR)
+				 hw_cs.at(joint_name).Kp,amsg)==return_type::ERROR)
 	    return return_type::ERROR;
 
 	  amsg = "Kd";
 	  if (handle_dbl_and_msg(iss_def_cmd_val, joint_name,
-				 hw_cs->at(joint_name).Kd,amsg)==return_type::ERROR)
+				 hw_cs.at(joint_name).Kd,amsg)==return_type::ERROR)
 	    return return_type::ERROR;
 
 	  found_joint=true;
@@ -135,6 +150,11 @@ namespace ros2_control_odri
 	return return_type::ERROR;
       }
     }
+    if (default_joint_cs=="default_joint_cmd")
+      hw_commands_ = hw_cs;
+    else if (default_joint_cs=="default_joint_state")
+      hw_states_ = hw_cs;
+
     return return_type::OK;
   }
 
@@ -143,12 +163,24 @@ namespace ros2_control_odri
   {
     std::vector<double> vec_des_start_pos;
 
+    if (info_.hardware_parameters.find("desired_starting_position")==info_.hardware_parameters.end())
+      {
+        RCLCPP_FATAL(
+                     rclcpp::get_logger("SystemOdriHardware"),
+                     "desired_starting_positon not in the parameter list of ros2_control_odri/SystemOdriHardware!");
+        return return_type::ERROR;
+      }
+
     // Hardware parameters provides a string
     std::string str_des_start_pos = info_.hardware_parameters["desired_starting_position"];
 
     // Read the parameter through a stream of strings.
     std::istringstream iss_des_start_pos;
     iss_des_start_pos.str(str_des_start_pos);
+
+    RCLCPP_INFO_STREAM(rclcpp::get_logger("SystemOdriHardware"),
+                       " Current desired_start_position size:"<<
+                       eig_des_start_pos_.size());
 
     // From istringstream to std::vector
     while (!iss_des_start_pos.eof()) {
@@ -157,6 +189,10 @@ namespace ros2_control_odri
       vec_des_start_pos.push_back(apos);
     }
     eig_des_start_pos_.resize(vec_des_start_pos.size());
+
+    RCLCPP_INFO_STREAM(rclcpp::get_logger("SystemOdriHardware"),
+                       " Current desired_start_position size:"<<
+                       eig_des_start_pos_.size());
 
     // From std::vector to VectorXd
     int idx_dsp=0;
