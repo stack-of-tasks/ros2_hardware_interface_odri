@@ -20,19 +20,19 @@ using namespace odri_control_interface;
 
 typedef Eigen::Matrix<double, 6, 1> Vector6d;
 
-int main()
+int main(int argc, char *argv[])
 {
     nice(-20);  // Give the process a high priority.
 
     // Define the robot from a yaml file.
-    auto robot = RobotFromYamlFile(CONFIG_ROBOT_YAML);
+    auto robot = RobotFromYamlFile(argv[1]);
 
     // Start the robot.
     robot->Start();
 
     // Define controller to calibrate the joints from yaml file.
     auto calib_ctrl = JointCalibratorFromYamlFile(
-        CONFIG_ROBOT_YAML, robot->joints);
+        argv[1], robot->joints);
 
     // Initialize simple pd controller.
     Vector6d torques;
