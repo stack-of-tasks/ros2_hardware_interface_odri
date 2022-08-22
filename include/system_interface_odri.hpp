@@ -15,11 +15,9 @@
 #ifndef ROS2_CONTROL_ODRI__SYSTEM_INTERFACE_ODRI_HPP_
 #define ROS2_CONTROL_ODRI__SYSTEM_INTERFACE_ODRI_HPP_
 
-namespace ros2_control_odri
-{
+namespace ros2_control_odri {
 
-struct PosVelEffortGains
-{
+struct PosVelEffortGains {
   double position;
   double velocity;
   double effort;
@@ -27,8 +25,7 @@ struct PosVelEffortGains
   double Kd;
 };
 
-struct GyroAccLineEulerQuater
-{
+struct GyroAccLineEulerQuater {
   double gyro_x;
   double gyro_y;
   double gyro_z;
@@ -50,21 +47,11 @@ struct GyroAccLineEulerQuater
 constexpr const auto HW_IF_GAIN_KP = "gain_kp";
 constexpr const auto HW_IF_GAIN_KD = "gain_kd";
 
-std::set<std::string> odri_list_of_cmd_inter {
-  "position",
-  "velocity",
-  "effort",
-  "gain_kp",
-  "gain_kd"
-};
+std::set<std::string> odri_list_of_cmd_inter{"position", "velocity", "effort",
+                                             "gain_kp", "gain_kd"};
 
-std::set<std::string> odri_list_of_state_inter {
-  "position",
-  "velocity",
-  "effort",
-  "gain_kp",
-  "gain_kd"
-};
+std::set<std::string> odri_list_of_state_inter{"position", "velocity", "effort",
+                                               "gain_kp", "gain_kd"};
 
 enum control_mode_t {
   POSITION,
