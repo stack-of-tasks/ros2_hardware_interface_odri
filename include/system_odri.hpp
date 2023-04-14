@@ -96,16 +96,20 @@ class SystemOdriHardware : public hardware_interface::SystemInterface {
   hardware_interface::return_type calibration();
 
   ROS2_CONTROL_ODRI_PUBLIC
-  hardware_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State & previous_state) override;
+  hardware_interface::CallbackReturn on_activate(
+      const rclcpp_lifecycle::State &previous_state) override;
 
   ROS2_CONTROL_ODRI_PUBLIC
-  hardware_interface::CallbackReturn on_deactivate(const rclcpp_lifecycle::State & previous_state) override;
+  hardware_interface::CallbackReturn on_deactivate(
+      const rclcpp_lifecycle::State &previous_state) override;
 
   ROS2_CONTROL_ODRI_PUBLIC
-  hardware_interface::return_type read(const rclcpp::Time & time, const rclcpp::Duration & period) override;
+  hardware_interface::return_type read(const rclcpp::Time &time,
+                                       const rclcpp::Duration &period) override;
 
   ROS2_CONTROL_ODRI_PUBLIC
-  hardware_interface::return_type write(const rclcpp::Time & time, const rclcpp::Duration & period) override;
+  hardware_interface::return_type write(
+      const rclcpp::Time &time, const rclcpp::Duration &period) override;
 
   ROS2_CONTROL_ODRI_PUBLIC
   hardware_interface::return_type display();
@@ -123,7 +127,8 @@ class SystemOdriHardware : public hardware_interface::SystemInterface {
   hardware_interface::return_type read_desired_starting_position();
 
   // Read default joint cmd and state values
-  hardware_interface::return_type read_default_cmd_state_value(std::string &default_joint_cs);
+  hardware_interface::return_type read_default_cmd_state_value(
+      std::string &default_joint_cs);
 
   // Read default cmd or state value.
   // default_joint_cs: "default_joint_cmd" or "default_joint_state"

@@ -44,7 +44,8 @@ namespace ros2_control_odri {
 Eigen::Vector6d desired_joint_position = Eigen::Vector6d::Zero();
 Eigen::Vector6d desired_torque = Eigen::Vector6d::Zero();
 
-hardware_interface::return_type SystemOdriHardware::read_default_cmd_state_value(
+hardware_interface::return_type
+SystemOdriHardware::read_default_cmd_state_value(
     std::string &default_joint_cs) {
   // Hardware parameters provides a string
   if (info_.hardware_parameters.find(default_joint_cs) ==
@@ -147,7 +148,8 @@ hardware_interface::return_type SystemOdriHardware::read_default_cmd_state_value
 }
 
 /// Reading desired position
-hardware_interface::return_type SystemOdriHardware::read_desired_starting_position() {
+hardware_interface::return_type
+SystemOdriHardware::read_desired_starting_position() {
   std::vector<double> vec_des_start_pos;
 
   if (info_.hardware_parameters.find("desired_starting_position") ==
@@ -191,7 +193,8 @@ hardware_interface::return_type SystemOdriHardware::read_desired_starting_positi
 
 hardware_interface::CallbackReturn SystemOdriHardware::on_init(
     const hardware_interface::HardwareInfo &info) {
-  if (hardware_interface::SystemInterface::on_init(info) != CallbackReturn::SUCCESS) {
+  if (hardware_interface::SystemInterface::on_init(info) !=
+      CallbackReturn::SUCCESS) {
     return hardware_interface::CallbackReturn::ERROR;
   }
 
@@ -452,7 +455,8 @@ SystemOdriHardware::export_command_interfaces() {
   return command_interfaces;
 }
 
-hardware_interface::CallbackReturn SystemOdriHardware::on_activate(const rclcpp_lifecycle::State & /*previous_state*/) {
+hardware_interface::CallbackReturn SystemOdriHardware::on_activate(
+    const rclcpp_lifecycle::State & /*previous_state*/) {
   //// Read Parameters ////
 
   /// Read odri_config_yaml
@@ -460,17 +464,20 @@ hardware_interface::CallbackReturn SystemOdriHardware::on_activate(const rclcpp_
   robot_ = RobotFromYamlFile(info_.hardware_parameters["odri_config_yaml"]);
 
   /// Read hardware parameter "desired_starting_position"
-  if (read_desired_starting_position() == hardware_interface::return_type::ERROR)
+  if (read_desired_starting_position() ==
+      hardware_interface::return_type::ERROR)
     return hardware_interface::CallbackReturn::ERROR;
 
   /// Read hardware parameter "default_joint_cmd"
   std::string default_joint_cs("default_joint_cmd");
-  if (read_default_cmd_state_value(default_joint_cs) == hardware_interface::return_type::ERROR)
+  if (read_default_cmd_state_value(default_joint_cs) ==
+      hardware_interface::return_type::ERROR)
     return hardware_interface::CallbackReturn::ERROR;
 
   /// Read hardware parameter "default_joint_state"
   default_joint_cs = "default_joint_state";
-  if (read_default_cmd_state_value(default_joint_cs) == hardware_interface::return_type::ERROR)
+  if (read_default_cmd_state_value(default_joint_cs) ==
+      hardware_interface::return_type::ERROR)
     return hardware_interface::CallbackReturn::ERROR;
 
   /// Initialize the robot to the desired starting position.
@@ -492,14 +499,16 @@ hardware_interface::CallbackReturn SystemOdriHardware::on_activate(const rclcpp_
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-hardware_interface::CallbackReturn SystemOdriHardware::on_deactivate(const rclcpp_lifecycle::State & /*previous_state*/) {
+hardware_interface::CallbackReturn SystemOdriHardware::on_deactivate(
+    const rclcpp_lifecycle::State & /*previous_state*/) {
   // Stop the MasterBoard
   main_board_ptr_->MasterBoardInterface::Stop();
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-hardware_interface::return_type SystemOdriHardware::read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) {
+hardware_interface::return_type SystemOdriHardware::read(
+    const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) {
   // Data acquisition (with ODRI)
   robot_->ParseSensorData();
 
@@ -551,7 +560,8 @@ hardware_interface::return_type SystemOdriHardware::read(const rclcpp::Time & /*
   return hardware_interface::return_type::OK;
 }
 
-hardware_interface::return_type SystemOdriHardware::write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) {
+hardware_interface::return_type SystemOdriHardware::write(
+    const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) {
   Eigen::Vector6d positions;
   Eigen::Vector6d velocities;
   Eigen::Vector6d torques;
