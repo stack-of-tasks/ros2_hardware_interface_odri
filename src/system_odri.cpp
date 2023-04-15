@@ -59,11 +59,11 @@ SystemOdriHardware::read_default_cmd_state_value(
   std::string str_des_start_pos = info_.hardware_parameters[default_joint_cs];
 
   typedef std::map<std::string, PosVelEffortGains> map_pveg;
-  map_pveg hw_cs;
+  map_pveg* hw_cs;
   if (default_joint_cs == "default_joint_cmd") {
-    hw_cs = hw_commands_;
+    hw_cs = &hw_commands_;
   } else if (default_joint_cs == "default_joint_state") {
-    hw_cs = hw_states_;
+    hw_cs = &hw_states_;
   } else
     return hardware_interface::return_type::ERROR;
 
@@ -76,8 +76,11 @@ SystemOdriHardware::read_default_cmd_state_value(
     std::string joint_name;
     RCLCPP_INFO_STREAM(
         rclcpp::get_logger("SystemOdriHardware"),
-        " Current value of iss_def_cmd_val:" << iss_def_cmd_val.str().c_str());
+        " Current value of iss_def_cmd_val for " << default_joint_cs << ":" << iss_def_cmd_val.str().c_str());
     iss_def_cmd_val >> joint_name;
+    if (joint_name == "" && iss_def_cmd_val.eof()) {
+      break;
+    }
 
     // Find the associate joint
     bool found_joint = false;
@@ -99,31 +102,31 @@ SystemOdriHardware::read_default_cmd_state_value(
 
         std::string amsg("position");
         if (handle_dbl_and_msg(iss_def_cmd_val, joint_name,
-                               hw_cs.at(joint_name).position,
+                               hw_cs->at(joint_name).position,
                                amsg) == hardware_interface::return_type::ERROR)
           return hardware_interface::return_type::ERROR;
 
         amsg = "velocity";
         if (handle_dbl_and_msg(iss_def_cmd_val, joint_name,
-                               hw_cs.at(joint_name).velocity,
+                               hw_cs->at(joint_name).velocity,
                                amsg) == hardware_interface::return_type::ERROR)
           return hardware_interface::return_type::ERROR;
 
         amsg = "effort";
         if (handle_dbl_and_msg(iss_def_cmd_val, joint_name,
-                               hw_cs.at(joint_name).effort,
+                               hw_cs->at(joint_name).effort,
                                amsg) == hardware_interface::return_type::ERROR)
           return hardware_interface::return_type::ERROR;
 
         amsg = "Kp";
         if (handle_dbl_and_msg(iss_def_cmd_val, joint_name,
-                               hw_cs.at(joint_name).Kp,
+                               hw_cs->at(joint_name).Kp,
                                amsg) == hardware_interface::return_type::ERROR)
           return hardware_interface::return_type::ERROR;
 
         amsg = "Kd";
         if (handle_dbl_and_msg(iss_def_cmd_val, joint_name,
-                               hw_cs.at(joint_name).Kd,
+                               hw_cs->at(joint_name).Kd,
                                amsg) == hardware_interface::return_type::ERROR)
           return hardware_interface::return_type::ERROR;
 
@@ -139,11 +142,6 @@ SystemOdriHardware::read_default_cmd_state_value(
       return hardware_interface::return_type::ERROR;
     }
   }
-  if (default_joint_cs == "default_joint_cmd")
-    hw_commands_ = hw_cs;
-  else if (default_joint_cs == "default_joint_state")
-    hw_states_ = hw_cs;
-
   return hardware_interface::return_type::OK;
 }
 
@@ -361,6 +359,9 @@ hardware_interface::return_type SystemOdriHardware::prepare_command_mode_switch(
       return hardware_interface::return_type::ERROR;
     }
     control_mode_[joint.name] = new_modes_[joint.name];
+    RCLCPP_INFO_STREAM(
+        rclcpp::get_logger("SystemOdriHardware"),
+        "control_mode[" << joint.name << "]: " << control_mode_[joint.name]);
   }
 
   std::cout << "in prepare_command_mode_switch" << std::endl;
@@ -488,13 +489,19 @@ hardware_interface::CallbackReturn SystemOdriHardware::on_activate(
     // First set the key
     joint_name_to_array_index_[joint.name] = 0;
   }
-
-  // Then build the index.
+  
+  /// Then build the index.
+  // Warning: depends on order of joint tags within ros2_control tag
+  //          and on order in robot.joint_modules.motor_numbers in config_solo12.yaml
   uint idx = 0;
   for (auto it = joint_name_to_array_index_.begin();
        it != joint_name_to_array_index_.end(); ++it) {
+    RCLCPP_INFO_STREAM(
+        rclcpp::get_logger("SystemOdriHardware"),
+        "joint_name=" << it->first << " -> index=" << idx);
     joint_name_to_array_index_[it->first] = idx++;
   }
+
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -582,6 +589,9 @@ hardware_interface::return_type SystemOdriHardware::write(
           hw_commands_[joint.name].Kp;
       gain_KD[joint_name_to_array_index_[joint.name]] =
           hw_commands_[joint.name].Kd;
+    } else if (control_mode_[joint.name] == control_mode_t::EFFORT) {
+      torques[joint_name_to_array_index_[joint.name]] =
+          hw_commands_[joint.name].effort;
     }
   }
 
