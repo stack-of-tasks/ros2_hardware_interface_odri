@@ -23,12 +23,11 @@
 #include <string>
 #include <vector>
 
-#include "hardware_interface/base_interface.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
-#include "hardware_interface/types/hardware_interface_status_values.hpp"
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "master_board_sdk/master_board_interface.h"
 #include "odri_control_interface/imu.hpp"
 #include "odri_control_interface/robot.hpp"
@@ -73,14 +72,13 @@ typedef Matrix<long, 4, 1> Vector4l;
 
 namespace ros2_control_odri {
 
-class SystemOdriHardware : public hardware_interface::BaseInterface<
-                               hardware_interface::SystemInterface> {
+class SystemOdriHardware : public hardware_interface::SystemInterface {
  public:
   RCLCPP_SHARED_PTR_DEFINITIONS(SystemOdriHardware)
 
   ROS2_CONTROL_ODRI_PUBLIC
-  hardware_interface::return_type configure(
-      const hardware_interface::HardwareInfo &system_info) override;
+  hardware_interface::CallbackReturn on_configure(
+      const rclcpp_lifecycle::State & ) override;
 
   ROS2_CONTROL_ODRI_PUBLIC
   std::vector<hardware_interface::StateInterface> export_state_interfaces()
@@ -99,16 +97,20 @@ class SystemOdriHardware : public hardware_interface::BaseInterface<
   return_type calibration();
 
   ROS2_CONTROL_ODRI_PUBLIC
-  return_type start() override;
+  hardware_interface::CallbackReturn on_activate
+  (const rclcpp_lifecycle::State &) override;
 
   ROS2_CONTROL_ODRI_PUBLIC
-  return_type stop() override;
+  hardware_interface::CallbackReturn on_deactivate
+  (const rclcpp_lifecycle::State &) override;
 
   ROS2_CONTROL_ODRI_PUBLIC
-  return_type read() override;
+  return_type read(const rclcpp::Time & time, const rclcpp::Duration & period)
+      override;
 
   ROS2_CONTROL_ODRI_PUBLIC
-  return_type write() override;
+  return_type write(const rclcpp::Time & time, const rclcpp::Duration & period)
+      override;
 
   ROS2_CONTROL_ODRI_PUBLIC
   return_type display();
@@ -123,10 +125,10 @@ class SystemOdriHardware : public hardware_interface::BaseInterface<
   void display_robot_state();
 
   // Read desired starting position.
-  return_type read_desired_starting_position();
+  CallbackReturn read_desired_starting_position();
 
   // Read default joint cmd and state values
-  return_type read_default_cmd_state_value(std::string &default_joint_cs);
+  CallbackReturn read_default_cmd_state_value(std::string &default_joint_cs);
 
   // Read default cmd or state value.
   // default_joint_cs: "default_joint_cmd" or "default_joint_state"

@@ -44,7 +44,8 @@ namespace ros2_control_odri {
 Eigen::Vector6d desired_joint_position = Eigen::Vector6d::Zero();
 Eigen::Vector6d desired_torque = Eigen::Vector6d::Zero();
 
-return_type SystemOdriHardware::read_default_cmd_state_value(
+hardware_interface::CallbackReturn
+SystemOdriHardware::read_default_cmd_state_value(
     std::string &default_joint_cs) {
   // Hardware parameters provides a string
   if (info_.hardware_parameters.find(default_joint_cs) ==
@@ -53,7 +54,7 @@ return_type SystemOdriHardware::read_default_cmd_state_value(
         rclcpp::get_logger("SystemOdriHardware"),
         "%s not in the parameter list of ros2_control_odri/SystemOdriHardware!",
         default_joint_cs.c_str());
-    return return_type::ERROR;
+    return CallbackReturn::ERROR;
   }
   std::string str_des_start_pos = info_.hardware_parameters[default_joint_cs];
 
@@ -64,7 +65,7 @@ return_type SystemOdriHardware::read_default_cmd_state_value(
   } else if (default_joint_cs == "default_joint_state") {
     hw_cs = hw_states_;
   } else
-    return return_type::ERROR;
+    return CallbackReturn::ERROR;
 
   // Read the parameter through a stream of strings.
   std::istringstream iss_def_cmd_val;
@@ -91,40 +92,40 @@ return_type SystemOdriHardware::read_default_cmd_state_value(
             RCLCPP_FATAL(rclcpp::get_logger("SystemOdriHardware"),
                          "default_joint_cmd '%s' no '%s'.", joint_name.c_str(),
                          msg.c_str());
-            return return_type::ERROR;
+            return CallbackReturn::ERROR;
           }
-          return return_type::OK;
+          return CallbackReturn::SUCCESS;
         };
 
         std::string amsg("position");
         if (handle_dbl_and_msg(iss_def_cmd_val, joint_name,
                                hw_cs.at(joint_name).position,
-                               amsg) == return_type::ERROR)
-          return return_type::ERROR;
+                               amsg) == CallbackReturn::ERROR)
+          return CallbackReturn::ERROR;
 
         amsg = "velocity";
         if (handle_dbl_and_msg(iss_def_cmd_val, joint_name,
                                hw_cs.at(joint_name).velocity,
-                               amsg) == return_type::ERROR)
-          return return_type::ERROR;
+                               amsg) == CallbackReturn::ERROR)
+          return CallbackReturn::ERROR;
 
         amsg = "effort";
         if (handle_dbl_and_msg(iss_def_cmd_val, joint_name,
                                hw_cs.at(joint_name).effort,
-                               amsg) == return_type::ERROR)
-          return return_type::ERROR;
+                               amsg) == CallbackReturn::ERROR)
+          return CallbackReturn::ERROR;
 
         amsg = "Kp";
         if (handle_dbl_and_msg(iss_def_cmd_val, joint_name,
                                hw_cs.at(joint_name).Kp,
-                               amsg) == return_type::ERROR)
-          return return_type::ERROR;
+                               amsg) == CallbackReturn::ERROR)
+          return CallbackReturn::ERROR;
 
         amsg = "Kd";
         if (handle_dbl_and_msg(iss_def_cmd_val, joint_name,
                                hw_cs.at(joint_name).Kd,
-                               amsg) == return_type::ERROR)
-          return return_type::ERROR;
+                               amsg) == CallbackReturn::ERROR)
+          return CallbackReturn::ERROR;
 
         found_joint = true;
         break;  // Found the joint break the loop
@@ -135,7 +136,7 @@ return_type SystemOdriHardware::read_default_cmd_state_value(
       RCLCPP_FATAL(rclcpp::get_logger("SystemOdriHardware"),
                    "Joint '%s' not found in '%s'.", joint_name.c_str(),
                    default_joint_cs.c_str());
-      return return_type::ERROR;
+      return CallbackReturn::ERROR;
     }
   }
   if (default_joint_cs == "default_joint_cmd")
@@ -143,11 +144,13 @@ return_type SystemOdriHardware::read_default_cmd_state_value(
   else if (default_joint_cs == "default_joint_state")
     hw_states_ = hw_cs;
 
-  return return_type::OK;
+  return CallbackReturn::SUCCESS;
 }
 
 /// Reading desired position
-return_type SystemOdriHardware::read_desired_starting_position() {
+hardware_interface::CallbackReturn
+SystemOdriHardware::read_desired_starting_position()
+{
   std::vector<double> vec_des_start_pos;
 
   if (info_.hardware_parameters.find("desired_starting_position") ==
@@ -155,7 +158,7 @@ return_type SystemOdriHardware::read_desired_starting_position() {
     RCLCPP_FATAL(rclcpp::get_logger("SystemOdriHardware"),
                  "desired_starting_positon not in the parameter list of "
                  "ros2_control_odri/SystemOdriHardware!");
-    return return_type::ERROR;
+    return CallbackReturn::ERROR;
   }
 
   // Hardware parameters provides a string
@@ -176,7 +179,7 @@ return_type SystemOdriHardware::read_desired_starting_position() {
     iss_des_start_pos >> apos;
     vec_des_start_pos.push_back(apos);
   }
-  eig_des_start_pos_.resize(vec_des_start_pos.size());
+  eig_des_start_pos_.resize((Eigen::Index)vec_des_start_pos.size());
 
   RCLCPP_INFO_STREAM(
       rclcpp::get_logger("SystemOdriHardware"),
@@ -186,14 +189,11 @@ return_type SystemOdriHardware::read_desired_starting_position() {
   int idx_dsp = 0;
   for (auto apos : vec_des_start_pos) eig_des_start_pos_[idx_dsp++] = apos;
 
-  return return_type::OK;
+  return CallbackReturn::SUCCESS;
 }
 
-return_type SystemOdriHardware::configure(
-    const hardware_interface::HardwareInfo &info) {
-  if (configure_default(info) != return_type::OK) {
-    return return_type::ERROR;
-  }
+hardware_interface::CallbackReturn SystemOdriHardware::on_configure(
+    const rclcpp_lifecycle::State &) {
 
   // For each sensor.
   for (const hardware_interface::ComponentInfo &sensor : info_.sensors) {
@@ -236,9 +236,9 @@ return_type SystemOdriHardware::configure(
     if (joint.command_interfaces.size() != odri_list_of_cmd_inter.size()) {
       RCLCPP_FATAL(
           rclcpp::get_logger("SystemOdriHardware"),
-          "Joint '%s' has %d command interfaces found.",  // 5 expected.",
+          "Joint '%s' has %lu command interfaces found.",  // 5 expected.",
           joint.name.c_str(), joint.command_interfaces.size());
-      return return_type::ERROR;
+      return CallbackReturn::ERROR;
     }
 
     // For each command interface of the joint
@@ -255,16 +255,16 @@ return_type SystemOdriHardware::configure(
           RCLCPP_FATAL(rclcpp::get_logger("SystemOdriHardware"),
                        "'%s' expected.", a_cmd_inter.c_str());
         }
-        return return_type::ERROR;
+        return CallbackReturn::ERROR;
       }
     }
 
     // Check if the state interface list is of the right size
     if (joint.state_interfaces.size() != odri_list_of_state_inter.size()) {
       RCLCPP_FATAL(rclcpp::get_logger("SystemOdriHardware"),
-                   "Joint '%s' has %d state interface.",  // 5 expected.",
+                   "Joint '%s' has %lu state interface.",  // 5 expected.",
                    joint.name.c_str(), joint.state_interfaces.size());
-      return return_type::ERROR;
+      return CallbackReturn::ERROR;
     }
 
     // For each state interface of the joint
@@ -283,14 +283,12 @@ return_type SystemOdriHardware::configure(
           RCLCPP_FATAL(rclcpp::get_logger("SystemOdriHardware"),
                        "'%s' expected.", a_state_inter.c_str());
         }
-        return return_type::ERROR;
+        return CallbackReturn::ERROR;
       }
     }
   }
 
-  status_ = hardware_interface::status::CONFIGURED;
-
-  return return_type::OK;
+  return CallbackReturn::SUCCESS;
 }
 
 void SystemOdriHardware::display_robot_state() {
@@ -454,7 +452,9 @@ SystemOdriHardware::export_command_interfaces() {
   return command_interfaces;
 }
 
-return_type SystemOdriHardware::start() {
+hardware_interface::CallbackReturn SystemOdriHardware::on_activate
+( const rclcpp_lifecycle::State &)
+{
   //// Read Parameters ////
 
   /// Read odri_config_yaml
@@ -462,18 +462,18 @@ return_type SystemOdriHardware::start() {
   robot_ = RobotFromYamlFile(info_.hardware_parameters["odri_config_yaml"]);
 
   /// Read hardware parameter "desired_starting_position"
-  if (read_desired_starting_position() == return_type::ERROR)
-    return return_type::ERROR;
+  if (read_desired_starting_position() == CallbackReturn::ERROR)
+    return CallbackReturn::ERROR;
 
   /// Read hardware parameter "default_joint_cmd"
   std::string default_joint_cs("default_joint_cmd");
-  if (read_default_cmd_state_value(default_joint_cs) == return_type::ERROR)
-    return return_type::ERROR;
+  if (read_default_cmd_state_value(default_joint_cs) == CallbackReturn::ERROR)
+    return CallbackReturn::ERROR;
 
   /// Read hardware parameter "default_joint_state"
   default_joint_cs = "default_joint_state";
-  if (read_default_cmd_state_value(default_joint_cs) == return_type::ERROR)
-    return return_type::ERROR;
+  if (read_default_cmd_state_value(default_joint_cs) == CallbackReturn::ERROR)
+    return CallbackReturn::ERROR;
 
   /// Initialize the robot to the desired starting position.
   robot_->Initialize(eig_des_start_pos_);
@@ -488,22 +488,24 @@ return_type SystemOdriHardware::start() {
   uint idx = 0;
   for (auto it = joint_name_to_array_index_.begin();
        it != joint_name_to_array_index_.end(); ++it) {
-    joint_name_to_array_index_[it->first] = idx++;
+    joint_name_to_array_index_[it->first] = (int)(idx++);
   }
 
-  status_ = hardware_interface::status::STARTED;
-
-  return return_type::OK;
+  return CallbackReturn::SUCCESS;
 }
 
-return_type SystemOdriHardware::stop() {
+hardware_interface::CallbackReturn SystemOdriHardware::on_deactivate
+( const rclcpp_lifecycle::State &)
+{
   // Stop the MasterBoard
   main_board_ptr_->MasterBoardInterface::Stop();
 
-  return return_type::OK;
+  return CallbackReturn::SUCCESS;
 }
 
-hardware_interface::return_type SystemOdriHardware::read() {
+hardware_interface::return_type SystemOdriHardware::read
+(const rclcpp::Time & /* time */, const rclcpp::Duration & /* period */)
+{
   // Data acquisition (with ODRI)
   robot_->ParseSensorData();
 
@@ -555,7 +557,9 @@ hardware_interface::return_type SystemOdriHardware::read() {
   return return_type::OK;
 }
 
-hardware_interface::return_type SystemOdriHardware::write() {
+hardware_interface::return_type SystemOdriHardware::write
+(const rclcpp::Time & /* time */, const rclcpp::Duration & /* period */)
+{
   Eigen::Vector6d positions;
   Eigen::Vector6d velocities;
   Eigen::Vector6d torques;
