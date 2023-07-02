@@ -23,6 +23,8 @@
 #include <system_interface_odri.hpp>
 #include <vector>
 
+#include "rcutils/logging_macros.h"
+
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
 
@@ -41,8 +43,6 @@ namespace ros2_control_odri {
 
 /* Code issue from demo_odri_actuator_control.cpp (ODRI)*/
 
-Eigen::Vector6d desired_joint_position = Eigen::Vector6d::Zero();
-Eigen::Vector6d desired_torque = Eigen::Vector6d::Zero();
 
 hardware_interface::CallbackReturn
 SystemOdriHardware::read_default_cmd_state_value(
@@ -194,6 +194,18 @@ SystemOdriHardware::read_desired_starting_position()
 
 hardware_interface::CallbackReturn SystemOdriHardware::on_configure(
     const rclcpp_lifecycle::State &) {
+
+  motor_numbers_.resize(info_.joints.size());
+  motor_reversed_polarities_.resize(info_.joints.size());
+  joint_lower_limits_.resize(info_.joints.size());
+  joint_upper_limits_.resize(info_.joints.size());
+  position_offsets_.resize(info_.joints.size());
+
+  positions_.resize(info_.joints.size());
+  velocities_.resize(info_.joints.size());
+  torques_.resize(info_.joints.size());
+  gain_KP_.resize(info_.joints.size());
+  gain_KD_.resize(info_.joints.size());
 
   // For each sensor.
   for (const hardware_interface::ComponentInfo &sensor : info_.sensors) {
@@ -456,10 +468,16 @@ hardware_interface::CallbackReturn SystemOdriHardware::on_activate
 ( const rclcpp_lifecycle::State &)
 {
   //// Read Parameters ////
-
+  RCUTILS_LOG_INFO_NAMED(
+        "SystemOdriHardware",
+        "will be reading file %s",info_.hardware_parameters["odri_config_yaml"].c_str());
   /// Read odri_config_yaml
   // Initialize Robot
   robot_ = RobotFromYamlFile(info_.hardware_parameters["odri_config_yaml"]);
+
+  RCUTILS_LOG_INFO_NAMED(
+        "SystemOdriHardware",
+        "Number of joints %d",robot_->joints->GetNumberMotors());
 
   /// Read hardware parameter "desired_starting_position"
   if (read_desired_starting_position() == CallbackReturn::ERROR)
@@ -489,6 +507,20 @@ hardware_interface::CallbackReturn SystemOdriHardware::on_activate
   for (auto it = joint_name_to_array_index_.begin();
        it != joint_name_to_array_index_.end(); ++it) {
     joint_name_to_array_index_[it->first] = (int)(idx++);
+  }
+
+  // Update the default values.
+  for (const hardware_interface::ComponentInfo &joint : info_.joints) {
+    positions_[joint_name_to_array_index_[joint.name]] =
+      hw_commands_[joint.name].position;
+    velocities_[joint_name_to_array_index_[joint.name]] =
+      hw_commands_[joint.name].velocity;
+    torques_[joint_name_to_array_index_[joint.name]] =
+      hw_commands_[joint.name].effort;
+    gain_KP_[joint_name_to_array_index_[joint.name]] =
+      hw_commands_[joint.name].Kp;
+    gain_KD_[joint_name_to_array_index_[joint.name]] =
+      hw_commands_[joint.name].Kd;
   }
 
   return CallbackReturn::SUCCESS;
@@ -560,45 +592,39 @@ hardware_interface::return_type SystemOdriHardware::read
 hardware_interface::return_type SystemOdriHardware::write
 (const rclcpp::Time & /* time */, const rclcpp::Duration & /* period */)
 {
-  Eigen::Vector6d positions;
-  Eigen::Vector6d velocities;
-  Eigen::Vector6d torques;
-
-  Eigen::Vector6d gain_KP;
-  Eigen::Vector6d gain_KD;
 
   for (const hardware_interface::ComponentInfo &joint : info_.joints) {
     if ((control_mode_[joint.name] == control_mode_t::POS_VEL_EFF_GAINS) ||
         (control_mode_[joint.name] == control_mode_t::POSITION)) {
-      positions[joint_name_to_array_index_[joint.name]] =
+      positions_[joint_name_to_array_index_[joint.name]] =
           hw_commands_[joint.name].position;
-      velocities[joint_name_to_array_index_[joint.name]] =
+      velocities_[joint_name_to_array_index_[joint.name]] =
           hw_commands_[joint.name].velocity;
-      torques[joint_name_to_array_index_[joint.name]] =
+      torques_[joint_name_to_array_index_[joint.name]] =
           hw_commands_[joint.name].effort;
-      gain_KP[joint_name_to_array_index_[joint.name]] =
+      gain_KP_[joint_name_to_array_index_[joint.name]] =
           hw_commands_[joint.name].Kp;
-      gain_KD[joint_name_to_array_index_[joint.name]] =
+      gain_KD_[joint_name_to_array_index_[joint.name]] =
           hw_commands_[joint.name].Kd;
     }
   }
 
   static unsigned int my_perso_counter2 = 0;
   if (my_perso_counter2 % 1000 == 0) {
-    std::cout << "positions:" << positions.transpose() << std::endl;
-    std::cout << "velocities:" << velocities.transpose() << std::endl;
-    std::cout << "torques: " << torques.transpose() << std::endl;
-    std::cout << "gain_KP: " << gain_KP.transpose() << std::endl;
-    std::cout << "gain_KD: " << gain_KD.transpose() << std::endl;
+    std::cout << "positions:" << positions_.transpose() << std::endl;
+    std::cout << "velocities:" << velocities_.transpose() << std::endl;
+    std::cout << "torques: " << torques_.transpose() << std::endl;
+    std::cout << "gain_KP: " << gain_KP_.transpose() << std::endl;
+    std::cout << "gain_KD: " << gain_KD_.transpose() << std::endl;
     std::cout << " " << std::endl;
   }
   ++my_perso_counter2;
 
-  robot_->joints->SetDesiredPositions(positions);
-  robot_->joints->SetDesiredVelocities(velocities);
-  robot_->joints->SetTorques(torques);
-  robot_->joints->SetPositionGains(gain_KP);
-  robot_->joints->SetVelocityGains(gain_KD);
+  robot_->joints->SetDesiredPositions(positions_);
+  robot_->joints->SetDesiredVelocities(velocities_);
+  robot_->joints->SetTorques(torques_);
+  robot_->joints->SetPositionGains(gain_KP_);
+  robot_->joints->SetVelocityGains(gain_KD_);
 
   robot_->SendCommandAndWaitEndOfCycle(0.00);
 

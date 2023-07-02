@@ -148,11 +148,17 @@ class SystemOdriHardware : public hardware_interface::SystemInterface {
 
   // Definition of multiple variables about Odri
   //  Joint
-  Eigen::Vector6i motor_numbers_;
-  Eigen::Vector6b motor_reversed_polarities_;
-  Eigen::Vector6d joint_lower_limits_;
-  Eigen::Vector6d joint_upper_limits_;
-  Eigen::Vector6d position_offsets_;
+  Eigen::VectorXi motor_numbers_;
+  Eigen::VectorXi motor_reversed_polarities_;
+  Eigen::VectorXd joint_lower_limits_;
+  Eigen::VectorXd joint_upper_limits_;
+  Eigen::VectorXd position_offsets_;
+
+  Eigen::VectorXd positions_;
+  Eigen::VectorXd velocities_;
+  Eigen::VectorXd torques_;
+  Eigen::VectorXd gain_KP_;
+  Eigen::VectorXd gain_KD_;
 
   // IMU
   Eigen::Vector3l rotate_vector_;
