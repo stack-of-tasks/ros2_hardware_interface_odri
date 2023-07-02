@@ -13,6 +13,20 @@ and the actuator. A robot_config.yaml file is needed.
 
 ```
 colcon build --packages-select ros2_hardware_interface_odri
+```
+## Configuration
+
+If you are using fastrtps as the ROS 2 DDS implementation, the variable ```FASTRTPS_DEFAULT_PROFILES_FILE```
+needs to point towards the file ```fastdds_root_workaround.xml```.
+This is needed because the node ```ros2_control_node``` is run in root mode, and that none root users should
+be able to interact with this node. If the file is located in the directory ```$HOME/env```:
+
+```
+export FASTRTPS_DEFAULT_PROFILES_FILE=$HOME/env/fastdds_root_workaround.xml
+```
+
+## Starting an odri based hardware.
+```
 source ./install/setup.bash
 ros2 launch ros2_control_odri_bringup system_odri.launch.py
 ```
