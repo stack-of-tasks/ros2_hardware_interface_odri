@@ -109,6 +109,7 @@ install(
   EXPORT ${TARGETS_EXPORT_NAME}
   DESTINATION lib)
 install(DIRECTORY include/ DESTINATION include)
+install(DIRECTORY env DESTINATION share/${PROJECT_NAME})
 
 # --- BINDINGS -----------------------------------------------------------------
 
