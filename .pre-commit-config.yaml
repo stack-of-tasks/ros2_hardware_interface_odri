@@ -31,32 +31,6 @@ repos:
       - id: trailing-whitespace
       - id: fix-byte-order-marker
 
-  # Python hooks
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.13.0
-    hooks:
-    -   id: pyupgrade
-        args: [--py36-plus]
-
-  - repo: https://github.com/psf/black
-    rev: 23.9.1
-    hooks:
-      - id: black
-        args: ["--line-length=99"]
-
-  # PEP 257
-  - repo: https://github.com/FalconSocial/pre-commit-mirrors-pep257
-    rev: v0.3.3
-    hooks:
-    - id: pep257
-      args: ["--ignore=D100,D101,D102,D103,D104,D105,D106,D107,D203,D212,D404"]
-
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.1.0
-    hooks:
-    - id: flake8
-      args: ["--ignore=E501"]
-
   # CPP hooks
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: v16.0.6
@@ -112,22 +86,6 @@ repos:
         #stages: [commit]
         #entry: ament_copyright
         #language: system
-
-  # Docs - RestructuredText hooks
-  - repo: https://github.com/PyCQA/doc8
-    rev: v1.1.1
-    hooks:
-      - id: doc8
-        args: ['--max-line-length=100', '--ignore=D001']
-        exclude: CHANGELOG\.rst$
-
-  - repo: https://github.com/pre-commit/pygrep-hooks
-    rev: v1.10.0
-    hooks:
-      - id: rst-backticks
-        exclude: CHANGELOG\.rst$
-      - id: rst-directive-colons
-      - id: rst-inline-touching-normal
 
   # Spellcheck in comments and docs
   # skipping of *.svg files is not working...
