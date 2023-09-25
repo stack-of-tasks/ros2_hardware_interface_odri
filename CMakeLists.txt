@@ -6,7 +6,7 @@
 # License BSD-3 clause
 #
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.14)
 
 # ----------------------------------------------------
 # --- CXX FLAGS --------------------------------------
@@ -19,16 +19,19 @@ set(CMAKE_VERBOSE_MAKEFILE True)
 set(PROJECT_NAME ros2_hardware_interface_odri)
 set(PROJECT_DESCRIPTION
     "Common interface for controlling robots build with the odri master board.")
-set(PROJECT_URL
-    https://github.com/stack-of-tasks/ros2_hardware_interface_odri.git)
+set(PROJECT_URL "https://github.com/stack-of-tasks/${PROJECT_NAME}")
 set(PROJECT_USE_CMAKE_EXPORT TRUE)
 
 # Check if the submodule cmake have been initialized
+set(JRL_CMAKE_MODULES "${CMAKE_CURRENT_LIST_DIR}/cmake")
 if(NOT EXISTS "${CMAKE_SOURCE_DIR}/cmake/base.cmake")
-  message(
-    FATAL_ERROR
-      "\nPlease run the following command first:\ngit submodule update --init\n"
-  )
+  message(STATUS "JRL cmakemodules not found. Let's fetch it.")
+  include(FetchContent)
+  FetchContent_Declare(
+    "jrl-cmakemodules"
+    GIT_REPOSITORY "https://github.com/jrl-umi3218/jrl-cmakemodules.git")
+  FetchContent_MakeAvailable("jrl-cmakemodules")
+  FetchContent_GetProperties("jrl-cmakemodules" SOURCE_DIR JRL_CMAKE_MODULES)
 endif()
 
 # --- OPTIONS ----------------------------------------
@@ -36,10 +39,10 @@ option(BUILD_PYTHON_INTERFACE "Build the python binding" ON)
 option(PYTHON_STANDARD_LAYOUT "Enable standard Python package layout" ON)
 option(PYTHON_DEB_LAYOUT "Enable Debian-style Python package layout" OFF)
 
-include(cmake/base.cmake)
-include(cmake/boost.cmake)
-include(cmake/python.cmake)
-include(cmake/ide.cmake)
+include("${JRL_CMAKE_MODULES}/base.cmake")
+include("${JRL_CMAKE_MODULES}/boost.cmake")
+include("${JRL_CMAKE_MODULES}/python.cmake")
+include("${JRL_CMAKE_MODULES}/ide.cmake")
 
 compute_project_args(PROJECT_ARGS LANGUAGES CXX)
 project(${PROJECT_NAME} ${PROJECT_ARGS})
@@ -48,7 +51,6 @@ check_minimal_cxx_standard(11 ENFORCE)
 # ----------------------------------------------------
 # --- DEPENDENCIES -----------------------------------
 # ----------------------------------------------------
-cmake_policy(SET CMP0057 NEW)
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(hardware_interface REQUIRED)
@@ -57,23 +59,20 @@ find_package(controller_interface REQUIRED)
 find_package(master_board_sdk REQUIRED)
 
 add_project_dependency(yaml-cpp CONFIG REQUIRED)
-add_project_dependency(Eigen3 REQUIRED PKG_CONFIG_REQUIRES "eigen3 >= 3.0.5")
+add_project_dependency(Eigen3 REQUIRED)
 add_project_dependency(master_board_sdk REQUIRED)
 add_project_dependency(odri_control_interface REQUIRED)
 add_project_dependency(controller_interface REQUIRED)
 
 # Set component to fetch from boost Get the python interface for the bindings
 if(BUILD_PYTHON_INTERFACE)
-  findpython(REQUIRED)
-  search_for_boost_python(REQUIRED)
-  add_project_dependency(eigenpy 2.5.0 REQUIRED PKG_CONFIG_REQUIRES
-                         "eigenpy >= 2.5.0")
+  add_project_dependency(eigenpy 3.0.0 REQUIRED)
 endif(BUILD_PYTHON_INTERFACE)
 
 #ament_target_dependencies(rclcpp)
 
 
-pluginlib_export_plugin_description_file(hardware_interface ros2_hardware_interface_odri.xml)
+pluginlib_export_plugin_description_file(hardware_interface "${PROJECT_NAME}.xml")
 
 ament_export_dependencies(odri_control_interface)
 
@@ -85,13 +84,19 @@ ament_export_dependencies(odri_control_interface)
 # ----------------------------------------------------
 
 # --- MAIN LIBRARY -------------------------------------------------------------
-set(ROS2_HARDWARE_INTERFACE_ODRI_SRC src/system_odri.cpp)
-add_library(${PROJECT_NAME} SHARED ${ROS2_HARDWARE_INTERFACE_ODRI_SRC})
-target_link_libraries(${PROJECT_NAME} ${YAML_CPP_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} master_board_sdk::master_board_sdk)
-target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
-target_link_libraries(${PROJECT_NAME} rclcpp::rclcpp)
-target_link_libraries(${PROJECT_NAME} odri_control_interface::odri_control_interface)
+set(${PROJECT_NAME}_SOURCES src/system_odri.cpp)
+set(${PROJECT_NAME}_HEADERS
+    "include/${PROJECT_NAME}/system_interface_odri.hpp"
+    "include/${PROJECT_NAME}/system_odri.hpp"
+    "include/${PROJECT_NAME}/visibility_control.h")
+
+add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES}
+    ${${PROJECT_NAME}_HEADERS})
+target_link_libraries(${PROJECT_NAME} ${YAML_CPP_LIBRARIES}
+ master_board_sdk::master_board_sdk
+ Eigen3::Eigen
+ rclcpp::rclcpp
+ odri_control_interface::odri_control_interface)
 
 ament_target_dependencies(
   ${PROJECT_NAME}
@@ -108,7 +113,6 @@ install(
   TARGETS ${PROJECT_NAME}
   EXPORT ${TARGETS_EXPORT_NAME}
   DESTINATION lib)
-install(DIRECTORY include/ DESTINATION include)
 
 # --- BINDINGS -----------------------------------------------------------------
 
@@ -117,8 +121,9 @@ if(BUILD_PYTHON_INTERFACE)
   # --- Build the wrapper library --- #
   set(${PYWRAP}_INSTALL_DIR ${PYTHON_SITELIB})
   target_link_libraries(${PYWRAP} ${PROJECT_NAME} eigenpy::eigenpy)
+  get_relative_rpath(${${PYWRAP}_INSTALL_DIR} ${PYWRAP}_INSTALL_RPATH)
   set_target_properties(${PYWRAP} PROPERTIES INSTALL_RPATH
-                                             "${CMAKE_INSTALL_PREFIX}/lib")
+                                             "${${PYWRAP}_INSTALL_RPATH}")
   install(TARGETS ${PYWRAP} DESTINATION ${${PYWRAP}_INSTALL_DIR})
 
   # --- Allow to do: make python --- #

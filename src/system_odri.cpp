@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "system_odri.hpp"
+#include "ros2_hardware_interface_odri/system_odri.hpp"
 
 #include <chrono>
 #include <cmath>
@@ -20,7 +20,6 @@
 #include <limits>
 #include <memory>
 #include <string>
-#include <system_interface_odri.hpp>
 #include <vector>
 
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
