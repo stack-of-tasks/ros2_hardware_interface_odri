@@ -57,14 +57,12 @@ add_project_dependency(master_board_sdk REQUIRED)
 add_project_dependency(odri_control_interface REQUIRED)
 add_project_dependency(controller_interface REQUIRED)
 
-#ament_target_dependencies(rclcpp)
+# ament_target_dependencies(rclcpp)
 
-pluginlib_export_plugin_description_file(hardware_interface "${PROJECT_NAME}.xml")
+pluginlib_export_plugin_description_file(hardware_interface
+                                         "${PROJECT_NAME}.xml")
 
 ament_export_dependencies(odri_control_interface)
-
-
-
 
 # ----------------------------------------------------
 # --- INCLUDE ----------------------------------------
@@ -78,20 +76,13 @@ set(${PROJECT_NAME}_HEADERS
     "include/${PROJECT_NAME}/visibility_control.h")
 
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES}
-    ${${PROJECT_NAME}_HEADERS})
-target_link_libraries(${PROJECT_NAME} ${YAML_CPP_LIBRARIES}
- master_board_sdk::master_board_sdk
- Eigen3::Eigen
- rclcpp::rclcpp
- odri_control_interface::odri_control_interface)
+                                   ${${PROJECT_NAME}_HEADERS})
+target_link_libraries(
+  ${PROJECT_NAME} ${YAML_CPP_LIBRARIES} master_board_sdk::master_board_sdk
+  Eigen3::Eigen rclcpp::rclcpp odri_control_interface::odri_control_interface)
 
-ament_target_dependencies(
-  ${PROJECT_NAME}
-  controller_interface
-  hardware_interface
-  pluginlib
-  rclcpp
-)
+ament_target_dependencies(${PROJECT_NAME} controller_interface
+                          hardware_interface pluginlib rclcpp)
 
 target_include_directories(
   ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

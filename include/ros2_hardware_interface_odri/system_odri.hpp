@@ -33,9 +33,9 @@
 #include "odri_control_interface/imu.hpp"
 #include "odri_control_interface/robot.hpp"
 #include "rclcpp/macros.hpp"
-#include "semantic_components/imu_sensor.hpp"
 #include "ros2_hardware_interface_odri/system_interface_odri.hpp"
 #include "ros2_hardware_interface_odri/visibility_control.h"
+#include "semantic_components/imu_sensor.hpp"
 
 using hardware_interface::return_type;
 
