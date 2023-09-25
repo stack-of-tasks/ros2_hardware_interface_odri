@@ -34,14 +34,7 @@ if(NOT EXISTS "${CMAKE_SOURCE_DIR}/cmake/base.cmake")
   FetchContent_GetProperties("jrl-cmakemodules" SOURCE_DIR JRL_CMAKE_MODULES)
 endif()
 
-# --- OPTIONS ----------------------------------------
-option(BUILD_PYTHON_INTERFACE "Build the python binding" ON)
-option(PYTHON_STANDARD_LAYOUT "Enable standard Python package layout" ON)
-option(PYTHON_DEB_LAYOUT "Enable Debian-style Python package layout" OFF)
-
 include("${JRL_CMAKE_MODULES}/base.cmake")
-include("${JRL_CMAKE_MODULES}/boost.cmake")
-include("${JRL_CMAKE_MODULES}/python.cmake")
 include("${JRL_CMAKE_MODULES}/ide.cmake")
 
 compute_project_args(PROJECT_ARGS LANGUAGES CXX)
@@ -64,13 +57,7 @@ add_project_dependency(master_board_sdk REQUIRED)
 add_project_dependency(odri_control_interface REQUIRED)
 add_project_dependency(controller_interface REQUIRED)
 
-# Set component to fetch from boost Get the python interface for the bindings
-if(BUILD_PYTHON_INTERFACE)
-  add_project_dependency(eigenpy 3.0.0 REQUIRED)
-endif(BUILD_PYTHON_INTERFACE)
-
 #ament_target_dependencies(rclcpp)
-
 
 pluginlib_export_plugin_description_file(hardware_interface "${PROJECT_NAME}.xml")
 
@@ -113,25 +100,5 @@ install(
   TARGETS ${PROJECT_NAME}
   EXPORT ${TARGETS_EXPORT_NAME}
   DESTINATION lib)
-
-# --- BINDINGS -----------------------------------------------------------------
-
-if(BUILD_PYTHON_INTERFACE)
-
-  # --- Build the wrapper library --- #
-  set(${PYWRAP}_INSTALL_DIR ${PYTHON_SITELIB})
-  target_link_libraries(${PYWRAP} ${PROJECT_NAME} eigenpy::eigenpy)
-  get_relative_rpath(${${PYWRAP}_INSTALL_DIR} ${PYWRAP}_INSTALL_RPATH)
-  set_target_properties(${PYWRAP} PROPERTIES INSTALL_RPATH
-                                             "${${PYWRAP}_INSTALL_RPATH}")
-  install(TARGETS ${PYWRAP} DESTINATION ${${PYWRAP}_INSTALL_DIR})
-
-  # --- Allow to do: make python --- #
-  add_custom_target(python)
-  set_target_properties(python PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD True)
-
-endif(BUILD_PYTHON_INTERFACE)
-
-
 
 ament_package()
