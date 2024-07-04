@@ -188,12 +188,8 @@ return_type SystemOdriHardware::read_desired_starting_position() {
   return return_type::OK;
 }
 
-return_type SystemOdriHardware::configure(
-    const hardware_interface::HardwareInfo &info) {
-  if (configure_default(info) != return_type::OK) {
-    return return_type::ERROR;
-  }
-
+hardware_interface::CallbackReturn SystemOdriHardware::on_configure(
+    const rclcpp_lifecycle::State & /* previous_state */) {
   // For each sensor.
   for (const hardware_interface::ComponentInfo &sensor : info_.sensors) {
     imu_states_[sensor.name] = {std::numeric_limits<double>::quiet_NaN(),
@@ -235,9 +231,9 @@ return_type SystemOdriHardware::configure(
     if (joint.command_interfaces.size() != odri_list_of_cmd_inter.size()) {
       RCLCPP_FATAL(
           rclcpp::get_logger("SystemOdriHardware"),
-          "Joint '%s' has %d command interfaces found.",  // 5 expected.",
+          "Joint '%s' has %ld command interfaces found.",  // 5 expected.",
           joint.name.c_str(), joint.command_interfaces.size());
-      return return_type::ERROR;
+      return hardware_interface::CallbackReturn::ERROR;
     }
 
     // For each command interface of the joint
@@ -254,16 +250,16 @@ return_type SystemOdriHardware::configure(
           RCLCPP_FATAL(rclcpp::get_logger("SystemOdriHardware"),
                        "'%s' expected.", a_cmd_inter.c_str());
         }
-        return return_type::ERROR;
+        return hardware_interface::CallbackReturn::ERROR;
       }
     }
 
     // Check if the state interface list is of the right size
     if (joint.state_interfaces.size() != odri_list_of_state_inter.size()) {
       RCLCPP_FATAL(rclcpp::get_logger("SystemOdriHardware"),
-                   "Joint '%s' has %d state interface.",  // 5 expected.",
+                   "Joint '%s' has %ld state interface.",  // 5 expected.",
                    joint.name.c_str(), joint.state_interfaces.size());
-      return return_type::ERROR;
+      return hardware_interface::CallbackReturn::ERROR;
     }
 
     // For each state interface of the joint
@@ -282,14 +278,12 @@ return_type SystemOdriHardware::configure(
           RCLCPP_FATAL(rclcpp::get_logger("SystemOdriHardware"),
                        "'%s' expected.", a_state_inter.c_str());
         }
-        return return_type::ERROR;
+        return hardware_interface::CallbackReturn::ERROR;
       }
     }
   }
 
-  status_ = hardware_interface::status::CONFIGURED;
-
-  return return_type::OK;
+  return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 void SystemOdriHardware::display_robot_state() {
@@ -356,7 +350,7 @@ return_type SystemOdriHardware::prepare_command_mode_switch(
                    "Joint '%s' has no valid control mode %d %d",
                    joint.name.c_str(), control_mode_[joint.name],
                    new_modes_[joint.name]);
-      return return_type::ERROR;
+      return hardware_interface::return_type::ERROR;
     }
     control_mode_[joint.name] = new_modes_[joint.name];
   }
@@ -453,7 +447,8 @@ SystemOdriHardware::export_command_interfaces() {
   return command_interfaces;
 }
 
-return_type SystemOdriHardware::start() {
+hardware_interface::CallbackReturn SystemOdriHardware::on_activate(
+    const rclcpp_lifecycle::State & /* previous_state */) {
   //// Read Parameters ////
 
   /// Read odri_config_yaml
@@ -461,18 +456,21 @@ return_type SystemOdriHardware::start() {
   robot_ = RobotFromYamlFile(info_.hardware_parameters["odri_config_yaml"]);
 
   /// Read hardware parameter "desired_starting_position"
-  if (read_desired_starting_position() == return_type::ERROR)
-    return return_type::ERROR;
+  if (read_desired_starting_position() ==
+      hardware_interface::return_type::ERROR)
+    return hardware_interface::CallbackReturn::ERROR;
 
   /// Read hardware parameter "default_joint_cmd"
   std::string default_joint_cs("default_joint_cmd");
-  if (read_default_cmd_state_value(default_joint_cs) == return_type::ERROR)
-    return return_type::ERROR;
+  if (read_default_cmd_state_value(default_joint_cs) ==
+      hardware_interface::return_type::ERROR)
+    return hardware_interface::CallbackReturn::ERROR;
 
   /// Read hardware parameter "default_joint_state"
   default_joint_cs = "default_joint_state";
-  if (read_default_cmd_state_value(default_joint_cs) == return_type::ERROR)
-    return return_type::ERROR;
+  if (read_default_cmd_state_value(default_joint_cs) ==
+      hardware_interface::return_type::ERROR)
+    return hardware_interface::CallbackReturn::ERROR;
 
   /// Initialize the robot to the desired starting position.
   robot_->Initialize(eig_des_start_pos_);
@@ -490,19 +488,19 @@ return_type SystemOdriHardware::start() {
     joint_name_to_array_index_[it->first] = idx++;
   }
 
-  status_ = hardware_interface::status::STARTED;
-
-  return return_type::OK;
+  return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-return_type SystemOdriHardware::stop() {
+hardware_interface::CallbackReturn SystemOdriHardware::on_deactivate(
+    const rclcpp_lifecycle::State & /* previous_state */) {
   // Stop the MasterBoard
   main_board_ptr_->MasterBoardInterface::Stop();
 
-  return return_type::OK;
+  return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-hardware_interface::return_type SystemOdriHardware::read() {
+hardware_interface::return_type SystemOdriHardware::read(
+    const rclcpp::Time &, const rclcpp::Duration &) {
   // Data acquisition (with ODRI)
   robot_->ParseSensorData();
 
@@ -554,7 +552,8 @@ hardware_interface::return_type SystemOdriHardware::read() {
   return return_type::OK;
 }
 
-hardware_interface::return_type SystemOdriHardware::write() {
+hardware_interface::return_type SystemOdriHardware::write(
+    const rclcpp::Time &, const rclcpp::Duration &) {
   Eigen::Vector6d positions;
   Eigen::Vector6d velocities;
   Eigen::Vector6d torques;
