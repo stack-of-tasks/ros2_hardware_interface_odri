@@ -58,7 +58,7 @@ SystemOdriHardware::read_default_cmd_state_value(
   std::string str_des_start_pos = info_.hardware_parameters[default_joint_cs];
 
   typedef std::map<std::string, PosVelEffortGains> map_pveg;
-  map_pveg* hw_cs;
+  map_pveg *hw_cs;
   if (default_joint_cs == "default_joint_cmd") {
     hw_cs = &hw_commands_;
   } else if (default_joint_cs == "default_joint_state") {
@@ -73,9 +73,10 @@ SystemOdriHardware::read_default_cmd_state_value(
   while (!iss_def_cmd_val.eof()) {
     // Find joint name.
     std::string joint_name;
-    RCLCPP_INFO_STREAM(
-        rclcpp::get_logger("SystemOdriHardware"),
-        " Current value of iss_def_cmd_val for " << default_joint_cs << ":" << iss_def_cmd_val.str().c_str());
+    RCLCPP_INFO_STREAM(rclcpp::get_logger("SystemOdriHardware"),
+                       " Current value of iss_def_cmd_val for "
+                           << default_joint_cs << ":"
+                           << iss_def_cmd_val.str().c_str());
     iss_def_cmd_val >> joint_name;
     if (joint_name == "" && iss_def_cmd_val.eof()) {
       break;
@@ -483,19 +484,18 @@ hardware_interface::CallbackReturn SystemOdriHardware::on_activate(
     // First set the key
     joint_name_to_array_index_[joint.name] = 0;
   }
-  
+
   /// Then build the index.
   // Warning: depends on order of joint tags within ros2_control tag
-  //          and on order in robot.joint_modules.motor_numbers in config_solo12.yaml
+  //          and on order in robot.joint_modules.motor_numbers in
+  //          config_solo12.yaml
   uint idx = 0;
   for (auto it = joint_name_to_array_index_.begin();
        it != joint_name_to_array_index_.end(); ++it) {
-    RCLCPP_INFO_STREAM(
-        rclcpp::get_logger("SystemOdriHardware"),
-        "joint_name=" << it->first << " -> index=" << idx);
+    RCLCPP_INFO_STREAM(rclcpp::get_logger("SystemOdriHardware"),
+                       "joint_name=" << it->first << " -> index=" << idx);
     joint_name_to_array_index_[it->first] = idx++;
   }
-
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
