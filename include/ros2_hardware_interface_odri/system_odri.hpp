@@ -36,8 +36,6 @@
 #include "ros2_hardware_interface_odri/visibility_control.h"
 #include "semantic_components/imu_sensor.hpp"
 
-using hardware_interface::return_type;
-
 #define rt_printf printf
 
 /**
@@ -89,12 +87,12 @@ class SystemOdriHardware : public hardware_interface::SystemInterface {
       override;
 
   ROS2_CONTROL_ODRI_PUBLIC
-  return_type prepare_command_mode_switch(
+  hardware_interface::return_type prepare_command_mode_switch(
       const std::vector<std::string> &start_interfaces,
       const std::vector<std::string> &stop_interfaces) override;
 
   ROS2_CONTROL_ODRI_PUBLIC
-  return_type calibration();
+  hardware_interface::return_type calibration();
 
   ROS2_CONTROL_ODRI_PUBLIC
   hardware_interface::CallbackReturn on_activate(
@@ -105,15 +103,15 @@ class SystemOdriHardware : public hardware_interface::SystemInterface {
       const rclcpp_lifecycle::State &previous_state) override;
 
   ROS2_CONTROL_ODRI_PUBLIC
-  hardware_interface::return_type read(const rclcpp::Time &,
-                                       const rclcpp::Duration &) override;
+  hardware_interface::return_type read(const rclcpp::Time &time,
+                                       const rclcpp::Duration &period) override;
 
   ROS2_CONTROL_ODRI_PUBLIC
-  hardware_interface::return_type write(const rclcpp::Time &,
-                                        const rclcpp::Duration &) override;
+  hardware_interface::return_type write(
+      const rclcpp::Time &time, const rclcpp::Duration &period) override;
 
   ROS2_CONTROL_ODRI_PUBLIC
-  return_type display();
+  hardware_interface::return_type display();
 
  private:
   // Parameters for the RRBot simulation
@@ -125,10 +123,11 @@ class SystemOdriHardware : public hardware_interface::SystemInterface {
   void display_robot_state();
 
   // Read desired starting position.
-  return_type read_desired_starting_position();
+  hardware_interface::return_type read_desired_starting_position();
 
   // Read default joint cmd and state values
-  return_type read_default_cmd_state_value(std::string &default_joint_cs);
+  hardware_interface::return_type read_default_cmd_state_value(
+      std::string &default_joint_cs);
 
   // Read default cmd or state value.
   // default_joint_cs: "default_joint_cmd" or "default_joint_state"

@@ -44,8 +44,10 @@ check_minimal_cxx_standard(11 ENFORCE)
 # ----------------------------------------------------
 # --- DEPENDENCIES -----------------------------------
 # ----------------------------------------------------
+cmake_policy(SET CMP0057 NEW)
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(odri_control_interface REQUIRED)
 find_package(controller_interface REQUIRED)
@@ -82,7 +84,7 @@ target_link_libraries(
   Eigen3::Eigen rclcpp::rclcpp odri_control_interface::odri_control_interface)
 
 ament_target_dependencies(${PROJECT_NAME} controller_interface
-                          hardware_interface pluginlib rclcpp)
+                          hardware_interface pluginlib rclcpp rclcpp_lifecycle)
 
 target_include_directories(
   ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

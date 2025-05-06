@@ -83,6 +83,7 @@ Tested on Bolt.
 
 # Credits
 
+- Andreas Bihlmaier (Update to ros2 Humble)
 - Maxime-Ulrich Fansi (04/2022-09/2022) - First working version of gazebo_bolt_ros2_control
 - Benjamin Amsellem (10/2021-02/2022) - First working version of ros2_hardware_bolt
 - Paul Rouanet - (03/2021-09/2021) - Building the LAAS Bolt, starting this repo
