@@ -37,6 +37,7 @@
     <depend>hardware_interface</depend>
     <depend>pluginlib</depend>
     <depend>rclcpp</depend>
+    <depend>rclcpp_lifecycle</depend>
     <depend>odri_control_interface</depend>
     <depend>controller_interface</depend>
 
