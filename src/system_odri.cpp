@@ -44,7 +44,7 @@ Eigen::Vector6d desired_joint_position = Eigen::Vector6d::Zero();
 Eigen::Vector6d desired_torque = Eigen::Vector6d::Zero();
 
 return_type SystemOdriHardware::read_default_cmd_state_value(
-    std::string &default_joint_cs) {
+    std::string& default_joint_cs) {
   // Hardware parameters provides a string
   if (info_.hardware_parameters.find(default_joint_cs) ==
       info_.hardware_parameters.end()) {
@@ -79,11 +79,11 @@ return_type SystemOdriHardware::read_default_cmd_state_value(
 
     // Find the associate joint
     bool found_joint = false;
-    for (const hardware_interface::ComponentInfo &joint : info_.joints) {
+    for (const hardware_interface::ComponentInfo& joint : info_.joints) {
       if (joint.name == joint_name) {
-        auto handle_dbl_and_msg = [](std::istringstream &iss_def_cmd_val,
-                                     std::string &joint_name, double &adbl,
-                                     std::string &msg) {
+        auto handle_dbl_and_msg = [](std::istringstream& iss_def_cmd_val,
+                                     std::string& joint_name, double& adbl,
+                                     std::string& msg) {
           if (!iss_def_cmd_val.eof())
             iss_def_cmd_val >> adbl;
           else {
@@ -189,9 +189,9 @@ return_type SystemOdriHardware::read_desired_starting_position() {
 }
 
 hardware_interface::CallbackReturn SystemOdriHardware::on_configure(
-    const rclcpp_lifecycle::State & /* previous_state */) {
+    const rclcpp_lifecycle::State& /* previous_state */) {
   // For each sensor.
-  for (const hardware_interface::ComponentInfo &sensor : info_.sensors) {
+  for (const hardware_interface::ComponentInfo& sensor : info_.sensors) {
     imu_states_[sensor.name] = {std::numeric_limits<double>::quiet_NaN(),
                                 std::numeric_limits<double>::quiet_NaN(),
                                 std::numeric_limits<double>::quiet_NaN(),
@@ -210,7 +210,7 @@ hardware_interface::CallbackReturn SystemOdriHardware::on_configure(
                                 std::numeric_limits<double>::quiet_NaN()};
   }
   // For each joint.
-  for (const hardware_interface::ComponentInfo &joint : info_.joints) {
+  for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     // Initialize state of the joint by default to NaN
     // it allows to see which joints are not properly initialized
     // from the real hardware
@@ -237,7 +237,7 @@ hardware_interface::CallbackReturn SystemOdriHardware::on_configure(
     }
 
     // For each command interface of the joint
-    for (const auto &a_joint_cmd_inter : joint.command_interfaces) {
+    for (const auto& a_joint_cmd_inter : joint.command_interfaces) {
       // Check if the command interface is inside the list
       if (odri_list_of_cmd_inter.find(a_joint_cmd_inter.name) ==
           odri_list_of_cmd_inter.end()) {
@@ -246,7 +246,7 @@ hardware_interface::CallbackReturn SystemOdriHardware::on_configure(
                      "Joint '%s' have %s command interfaces found. One of the "
                      "following values is expected",
                      joint.name.c_str(), a_joint_cmd_inter.name.c_str());
-        for (const auto &a_cmd_inter : odri_list_of_cmd_inter) {
+        for (const auto& a_cmd_inter : odri_list_of_cmd_inter) {
           RCLCPP_FATAL(rclcpp::get_logger("SystemOdriHardware"),
                        "'%s' expected.", a_cmd_inter.c_str());
         }
@@ -263,7 +263,7 @@ hardware_interface::CallbackReturn SystemOdriHardware::on_configure(
     }
 
     // For each state interface of the joint
-    for (const auto &a_joint_state_inter : joint.state_interfaces) {
+    for (const auto& a_joint_state_inter : joint.state_interfaces) {
       std::string joint_state_inter_name = a_joint_state_inter.name;
 
       // Check if the state interface is inside the list
@@ -274,7 +274,7 @@ hardware_interface::CallbackReturn SystemOdriHardware::on_configure(
                      "was expected: ",
                      joint.name.c_str(), a_joint_state_inter.name.c_str());
 
-        for (const auto &a_state_inter : odri_list_of_state_inter) {
+        for (const auto& a_state_inter : odri_list_of_state_inter) {
           RCLCPP_FATAL(rclcpp::get_logger("SystemOdriHardware"),
                        "'%s' expected.", a_state_inter.c_str());
         }
@@ -287,7 +287,7 @@ hardware_interface::CallbackReturn SystemOdriHardware::on_configure(
 }
 
 void SystemOdriHardware::display_robot_state() {
-  for (const hardware_interface::ComponentInfo &joint : info_.joints) {
+  for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     std::cout << "joint " << joint.name << " "
               << hw_commands_[joint.name].position << " "
               << hw_commands_[joint.name].velocity << " "
@@ -299,17 +299,17 @@ void SystemOdriHardware::display_robot_state() {
 }
 
 return_type SystemOdriHardware::prepare_command_mode_switch(
-    const std::vector<std::string> &start_interfaces,
-    const std::vector<std::string> &stop_interfaces) {
+    const std::vector<std::string>& start_interfaces,
+    const std::vector<std::string>& stop_interfaces) {
   // Initialize new modes.
-  for (const hardware_interface::ComponentInfo &joint : info_.joints) {
+  for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     new_modes_[joint.name] = control_mode_t::NO_VALID_MODE;
   }
 
   /// Check that the key interfaces are coherent
-  for (auto &key : start_interfaces) {
+  for (auto& key : start_interfaces) {
     /// For each joint
-    for (const hardware_interface::ComponentInfo &joint : info_.joints) {
+    for (const hardware_interface::ComponentInfo& joint : info_.joints) {
       if (key == joint.name + "/" + hardware_interface::HW_IF_POSITION) {
         new_modes_[joint.name] = control_mode_t::POSITION;
       }
@@ -332,7 +332,7 @@ return_type SystemOdriHardware::prepare_command_mode_switch(
   }
   // Stop motion on all relevant joints that are stopping
   for (std::string key : stop_interfaces) {
-    for (const hardware_interface::ComponentInfo &joint : info_.joints) {
+    for (const hardware_interface::ComponentInfo& joint : info_.joints) {
       if (key.find(joint.name) != std::string::npos) {
         hw_commands_[joint.name].velocity = 0.0;
         hw_commands_[joint.name].effort = 0.0;
@@ -342,7 +342,7 @@ return_type SystemOdriHardware::prepare_command_mode_switch(
     }
   }
   // Set the new command modes
-  for (const hardware_interface::ComponentInfo &joint : info_.joints) {
+  for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     if ((control_mode_[joint.name] == control_mode_t::NO_VALID_MODE) &&
         (new_modes_[joint.name] == control_mode_t::NO_VALID_MODE)) {
       // Something else is using the joint! Abort!
@@ -363,7 +363,7 @@ return_type SystemOdriHardware::prepare_command_mode_switch(
 std::vector<hardware_interface::StateInterface>
 SystemOdriHardware::export_state_interfaces() {
   std::vector<hardware_interface::StateInterface> state_interfaces;
-  for (const hardware_interface::ComponentInfo &joint : info_.joints) {
+  for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
         joint.name, hardware_interface::HW_IF_POSITION,
         &hw_states_[joint.name].position));
@@ -379,7 +379,7 @@ SystemOdriHardware::export_state_interfaces() {
         joint.name, HW_IF_GAIN_KD, &hw_states_[joint.name].Kd));
   }
 
-  for (const hardware_interface::ComponentInfo &sensor : info_.sensors) {
+  for (const hardware_interface::ComponentInfo& sensor : info_.sensors) {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
         sensor.name, "gyroscope_x", &imu_states_[sensor.name].gyro_x));
     state_interfaces.emplace_back(hardware_interface::StateInterface(
@@ -428,7 +428,7 @@ std::vector<hardware_interface::CommandInterface>
 SystemOdriHardware::export_command_interfaces() {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
 
-  for (const hardware_interface::ComponentInfo &joint : info_.joints) {
+  for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         joint.name, hardware_interface::HW_IF_POSITION,
         &hw_commands_[joint.name].position));
@@ -448,7 +448,7 @@ SystemOdriHardware::export_command_interfaces() {
 }
 
 hardware_interface::CallbackReturn SystemOdriHardware::on_activate(
-    const rclcpp_lifecycle::State & /* previous_state */) {
+    const rclcpp_lifecycle::State& /* previous_state */) {
   //// Read Parameters ////
 
   /// Read odri_config_yaml
@@ -476,7 +476,7 @@ hardware_interface::CallbackReturn SystemOdriHardware::on_activate(
   robot_->Initialize(eig_des_start_pos_);
 
   /// Build the map from name to index.
-  for (const hardware_interface::ComponentInfo &joint : info_.joints) {
+  for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     // First set the key
     joint_name_to_array_index_[joint.name] = 0;
   }
@@ -492,7 +492,7 @@ hardware_interface::CallbackReturn SystemOdriHardware::on_activate(
 }
 
 hardware_interface::CallbackReturn SystemOdriHardware::on_deactivate(
-    const rclcpp_lifecycle::State & /* previous_state */) {
+    const rclcpp_lifecycle::State& /* previous_state */) {
   // Stop the MasterBoard
   main_board_ptr_->MasterBoardInterface::Stop();
 
@@ -500,7 +500,7 @@ hardware_interface::CallbackReturn SystemOdriHardware::on_deactivate(
 }
 
 hardware_interface::return_type SystemOdriHardware::read(
-    const rclcpp::Time &, const rclcpp::Duration &) {
+    const rclcpp::Time&, const rclcpp::Duration&) {
   // Data acquisition (with ODRI)
   robot_->ParseSensorData();
 
@@ -515,7 +515,7 @@ hardware_interface::return_type SystemOdriHardware::read(
   auto imu_quater = robot_->imu->GetAttitudeQuaternion();
 
   // Assignment of sensor data to ros2_control variables (URDF)
-  for (const hardware_interface::ComponentInfo &joint : info_.joints) {
+  for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     hw_states_[joint.name].position =
         sensor_positions[joint_name_to_array_index_[joint.name]];
     hw_states_[joint.name].velocity =
@@ -553,7 +553,7 @@ hardware_interface::return_type SystemOdriHardware::read(
 }
 
 hardware_interface::return_type SystemOdriHardware::write(
-    const rclcpp::Time &, const rclcpp::Duration &) {
+    const rclcpp::Time&, const rclcpp::Duration&) {
   Eigen::Vector6d positions;
   Eigen::Vector6d velocities;
   Eigen::Vector6d torques;
@@ -561,7 +561,7 @@ hardware_interface::return_type SystemOdriHardware::write(
   Eigen::Vector6d gain_KP;
   Eigen::Vector6d gain_KD;
 
-  for (const hardware_interface::ComponentInfo &joint : info_.joints) {
+  for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     if ((control_mode_[joint.name] == control_mode_t::POS_VEL_EFF_GAINS) ||
         (control_mode_[joint.name] == control_mode_t::POSITION)) {
       positions[joint_name_to_array_index_[joint.name]] =
