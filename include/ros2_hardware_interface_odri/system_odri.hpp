@@ -78,7 +78,7 @@ class SystemOdriHardware : public hardware_interface::SystemInterface {
 
   ROS2_CONTROL_ODRI_PUBLIC
   hardware_interface::CallbackReturn on_configure(
-      const rclcpp_lifecycle::State &previous_state) override;
+      const rclcpp_lifecycle::State& previous_state) override;
 
   ROS2_CONTROL_ODRI_PUBLIC
   std::vector<hardware_interface::StateInterface> export_state_interfaces()
@@ -90,27 +90,27 @@ class SystemOdriHardware : public hardware_interface::SystemInterface {
 
   ROS2_CONTROL_ODRI_PUBLIC
   return_type prepare_command_mode_switch(
-      const std::vector<std::string> &start_interfaces,
-      const std::vector<std::string> &stop_interfaces) override;
+      const std::vector<std::string>& start_interfaces,
+      const std::vector<std::string>& stop_interfaces) override;
 
   ROS2_CONTROL_ODRI_PUBLIC
   return_type calibration();
 
   ROS2_CONTROL_ODRI_PUBLIC
   hardware_interface::CallbackReturn on_activate(
-      const rclcpp_lifecycle::State &previous_state) override;
+      const rclcpp_lifecycle::State& previous_state) override;
 
   ROS2_CONTROL_ODRI_PUBLIC
   hardware_interface::CallbackReturn on_deactivate(
-      const rclcpp_lifecycle::State &previous_state) override;
+      const rclcpp_lifecycle::State& previous_state) override;
 
   ROS2_CONTROL_ODRI_PUBLIC
-  hardware_interface::return_type read(const rclcpp::Time &,
-                                       const rclcpp::Duration &) override;
+  hardware_interface::return_type read(const rclcpp::Time&,
+                                       const rclcpp::Duration&) override;
 
   ROS2_CONTROL_ODRI_PUBLIC
-  hardware_interface::return_type write(const rclcpp::Time &,
-                                        const rclcpp::Duration &) override;
+  hardware_interface::return_type write(const rclcpp::Time&,
+                                        const rclcpp::Duration&) override;
 
   ROS2_CONTROL_ODRI_PUBLIC
   return_type display();
@@ -128,7 +128,7 @@ class SystemOdriHardware : public hardware_interface::SystemInterface {
   return_type read_desired_starting_position();
 
   // Read default joint cmd and state values
-  return_type read_default_cmd_state_value(std::string &default_joint_cs);
+  return_type read_default_cmd_state_value(std::string& default_joint_cs);
 
   // Read default cmd or state value.
   // default_joint_cs: "default_joint_cmd" or "default_joint_state"
