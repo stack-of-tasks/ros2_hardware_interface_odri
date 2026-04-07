@@ -1,3 +1,5 @@
+ci:
+  autoupdate_schedule: quarterly
 repos:
 - repo: https://github.com/cheshirekow/cmake-format-precommit
   rev: v0.6.13
